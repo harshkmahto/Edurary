@@ -35,4 +35,6 @@ app.use('/course', courseRouter);
 app.use('/analytics', analyticsRouter); 
 app.use('/support', supportRouter);
 
-module.exports = app;
+connectDB();
+
+export default app;

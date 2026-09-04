@@ -1,15 +1,30 @@
 import mongoose from "mongoose";
-import config  from "./config.js";
+import config from "./config.js";
 
-const connectDB = async ()=>{
+let cached = global.mongoose;
 
- try {
-   const dbConn = await mongoose.connect(config.DB_URI);
-   console.log(`DB is connected`);
- } catch (error) {
-    console.log('Databse Connection Error', error.message);
-    process.exit(1);  
- }
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
-export default  connectDB;  
+async function connectDB() {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const MONGODB_URI = process.env.MONGODB_URI || config.DB_URI;
+
+    cached.promise = mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }).then((mongoose) => {
+      return mongoose;
+    });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
+
+export default connectDB;
