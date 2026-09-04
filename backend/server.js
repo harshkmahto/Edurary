@@ -35,7 +35,4 @@ app.use('/course', courseRouter);
 app.use('/analytics', analyticsRouter); 
 app.use('/support', supportRouter);
 
-app.listen(config.PORT, () => {
-  console.log(`Server is running on ${config.PORT} `);
-  connectDB()
-});
+module.exports = app;
