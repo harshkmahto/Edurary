@@ -11,7 +11,7 @@ import {
 import bookService from '../../services/book.service';
 import { useAuth } from '../../context/authContext';
 import MainButton from '../../components/style/MainButton';
-import BookRating from '../../components/books/BookRating';
+import BookRating from '../../components/Books/BookRating';
 import SimilarBooks from '../../components/Books/SimmilerBooks';
 
 const BookPreview = () => {
