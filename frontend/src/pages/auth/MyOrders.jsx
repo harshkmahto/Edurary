@@ -212,24 +212,44 @@ const MyOrders = () => {
     }
   };
 
-  // ✅ FIXED: Handle Pay Now button click - Extract ID properly
-  const handlePayNow = (subscriberId, subscriptionData) => {
-    // Extract the subscription ID properly
-    let subId = subscriptionData;
-    
-    // If subscriptionData is an object with _id property, extract it
-    if (typeof subscriptionData === 'object' && subscriptionData !== null) {
-      subId = subscriptionData._id || subscriptionData.id || subscriptionData;
+const handlePayNow = (subscriberId, subscriptionData) => {
+  console.log('Subscription Data:', subscriptionData); // Debug log
+  
+  let subId;
+  
+  // Case 1: If subscriptionData is already a string
+  if (typeof subscriptionData === 'string') {
+    subId = subscriptionData;
+  }
+  // Case 2: If subscriptionData is an object with _id
+  else if (typeof subscriptionData === 'object' && subscriptionData !== null) {
+    subId = subscriptionData._id || subscriptionData.id;
+  }
+  // Case 3: If subscriptionData is something else, try to find it in the subscriptions array
+  else {
+    const sub = subscriptions.find(s => s._id === subscriberId);
+    if (sub && sub.subscriptionId) {
+      subId = typeof sub.subscriptionId === 'object' 
+        ? sub.subscriptionId._id 
+        : sub.subscriptionId;
     }
-    
-    // If it's still an object, convert to string (fallback)
-    if (typeof subId === 'object') {
-      subId = subId.toString();
-    }
-    
-    // Navigate to checkout with resume parameter
-    navigate(`/checkout/${subId}?resume=${subscriberId}`);
-  };
+  }
+  
+  // If subId is still an object, convert to string
+  if (typeof subId === 'object' && subId !== null) {
+    subId = subId._id || subId.toString();
+  }
+  
+  // Make sure we have a valid ID
+  if (!subId) {
+    console.error('Could not extract subscription ID:', subscriptionData);
+    toast.error('Unable to process payment. Please try again.');
+    return;
+  }
+  
+  // Navigate to checkout with resume parameter
+  navigate(`/checkout/${subId}?resume=${subscriberId}`);
+};
 
   // Loading State
   if (authLoading || loading) {
