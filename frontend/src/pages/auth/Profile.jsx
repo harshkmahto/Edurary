@@ -14,6 +14,29 @@ import {
 } from 'lucide-react';
 import MainButton from '../../components/style/MainButton';
 
+const StatusBadge = ({ verified, active }) => {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-300 flex items-center gap-1.5 ${
+        verified 
+          ? 'bg-[rgba(0,200,100,0.15)] text-[#00cc88] border border-[rgba(0,200,100,0.2)] hover:bg-[rgba(0,200,100,0.25)]' 
+          : 'bg-[rgba(255,200,0,0.15)] text-[#ffcc44] border border-[rgba(255,200,0,0.2)] hover:bg-[rgba(255,200,0,0.25)]'
+      }`}>
+        {verified ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+        {verified ? 'Verified' : 'Unverified'}
+      </span>
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-300 flex items-center gap-1.5 ${
+        active 
+          ? 'bg-[rgba(0,200,100,0.15)] text-[#00cc88] border border-[rgba(0,200,100,0.2)] hover:bg-[rgba(0,200,100,0.25)]' 
+          : 'bg-[rgba(255,50,50,0.15)] text-[#ff4444] border border-[rgba(255,50,50,0.2)] hover:bg-[rgba(255,50,50,0.25)]'
+      }`}>
+        <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-[#00cc88]' : 'bg-[#ff4444]'} animate-pulse`} />
+        {active ? 'Active' : 'Inactive'}
+      </span>
+    </div>
+  );
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, checkAuth } = useAuth();
@@ -36,8 +59,6 @@ const Profile = () => {
   const [isUsernameChecking, setIsUsernameChecking] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [remainingDays, setRemainingDays] = useState(0);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [localUser, setLocalUser] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -48,9 +69,8 @@ const Profile = () => {
     try {
       setLoading(true);
       const response = await authService.getProfile();
-      if (response.success && response.data && response.data.user) {
+      if (response.success) {
         const userData = response.data.user;
-        setLocalUser(userData);
         setFormData({
           name: userData.name || '',
           username: userData.username || '',
@@ -60,10 +80,8 @@ const Profile = () => {
           profession: userData.profession || '',
           bio: userData.bio || ''
         });
-        // SAFELY set profile picture
-        const profilePic = userData.profilePicture || null;
-        setProfilePicture(profilePic);
-        setProfilePicturePreview(profilePic);
+        setProfilePicture(userData.profilePicture || null);
+        setProfilePicturePreview(userData.profilePicture || null);
         
         // Get subscription details
         if (userData.activeSubscription) {
@@ -106,12 +124,12 @@ const Profile = () => {
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        toast.error('Please select an image file');
         return;
       }
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should be less than 5MB');
+        toast.error('Image size should be less than 5MB');
         return;
       }
       setProfilePicture(file);
@@ -120,20 +138,6 @@ const Profile = () => {
         setProfilePicturePreview(e.target.result);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const handleProfilePictureClick = () => {
-    if (editing) {
-      // In edit mode: open file upload
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
-      }
-    } else {
-      // In view mode: open image popup
-      if (profilePicturePreview) {
-        setShowImageModal(true);
-      }
     }
   };
 
@@ -228,17 +232,17 @@ const Profile = () => {
     setEditing(false);
     setErrors({});
     setSuccess('');
-    if (localUser) {
+    if (user) {
       setFormData({
-        name: localUser.name || '',
-        username: localUser.username || '',
-        phone: localUser.phone || '',
-        age: localUser.age || '',
-        city: localUser.city || '',
-        profession: localUser.profession || '',
-        bio: localUser.bio || ''
+        name: user.name || '',
+        username: user.username || '',
+        phone: user.phone || '',
+        age: user.age || '',
+        city: user.city || '',
+        profession: user.profession || '',
+        bio: user.bio || ''
       });
-      setProfilePicturePreview(localUser.profilePicture || null);
+      setProfilePicturePreview(user.profilePicture || null);
     }
   };
 
@@ -262,26 +266,6 @@ const Profile = () => {
             <div className="w-16 h-16 border-3 border-[rgba(200,150,62,0.1)] border-t-[#c8963e] rounded-full animate-spin" />
           </div>
           <p className="mt-4 text-[#d4b8a0] animate-pulse">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Use localUser instead of user for display
-  const displayUser = localUser || user;
-
-  // If no user data, show login prompt
-  if (!displayUser) {
-    return (
-      <div className="min-h-screen bg-[#0a0505] relative overflow-hidden flex items-center justify-center">
-        <div className="relative z-10 text-center">
-          <p className="text-[#d4b8a0] text-lg">Please login to view your profile</p>
-          <button
-            onClick={() => navigate('/auth/signin')}
-            className="mt-4 px-6 py-2 bg-[#c8963e] text-white rounded-lg hover:bg-[#d4a85a] transition-colors"
-          >
-            Login
-          </button>
         </div>
       </div>
     );
@@ -339,7 +323,7 @@ const Profile = () => {
               </span>
             </div>
 
-            {/* Avatar with Click Handler */}
+            {/* Avatar with Upload */}
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-[#c8963e]/20 rounded-full blur-2xl animate-pulse" />
               <div 
@@ -349,8 +333,8 @@ const Profile = () => {
                           flex items-center justify-center
                           shadow-[0_0_40px_rgba(200,150,62,0.15)]
                           transition-transform duration-300 hover:scale-105
-                          overflow-hidden cursor-pointer"
-                onClick={handleProfilePictureClick}
+                          overflow-hidden cursor-pointer group"
+                onClick={() => fileInputRef.current?.click()}
               >
                 {profilePicturePreview ? (
                   <img 
@@ -360,15 +344,12 @@ const Profile = () => {
                   />
                 ) : (
                   <span className="text-3xl sm:text-4xl font-bold text-[#d4a85a]">
-                    {displayUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 )}
-                {/* Camera icon only shown in edit mode */}
-                {editing && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <Camera className="w-6 h-6 text-white" />
-                  </div>
-                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="w-6 h-6 text-white" />
+                </div>
               </div>
               <input
                 ref={fileInputRef}
@@ -377,7 +358,7 @@ const Profile = () => {
                 onChange={handleProfilePictureChange}
                 className="hidden"
               />
-              {displayUser?.isVerified && (
+              {user?.isVerified && (
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full 
                               bg-gradient-to-r from-[#00cc88] to-[#00e699]
                               border-2 border-[#0a0505]
@@ -389,18 +370,16 @@ const Profile = () => {
 
             <h2 className="text-2xl sm:text-3xl font-bold text-[#f5e6c8] mt-4 
                           transition-all duration-300 hover:text-[#d4a85a]">
-              {displayUser?.name || 'User'}
+              {user?.name}
             </h2>
             <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
               <AtSign className="w-3.5 h-3.5 text-[#c8963e]" />
-              {displayUser?.username || ''}
+              {user?.username}
             </p>
-            {displayUser?.bio && (
               <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
-                <StarCheck className="w-3.5 h-3.5 text-[#c8963e]" />
-                {displayUser?.bio}
-              </p>
-            )}
+              <StarCheck className="w-3.5 h-3.5 text-[#c8963e]" />
+              {user?.bio}
+            </p>
 
             {/* Active Subscription */}
             {subscription && subscription.subscriptionStatus === 'active' && (
@@ -513,7 +492,7 @@ const Profile = () => {
                   </label>
                   <input
                     type="email"
-                    value={displayUser?.email || ''}
+                    value={user?.email || ''}
                     disabled
                     className="w-full px-4 py-3 bg-[rgba(10,5,5,0.3)] border border-[rgba(200,150,62,0.1)] rounded-xl text-[#5a3d2a] cursor-not-allowed"
                   />
@@ -632,7 +611,7 @@ const Profile = () => {
                     <Mail className="w-3.5 h-3.5 text-[#c8963e]" />
                     Email
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">{displayUser?.email || 'Not provided'}</span>
+                  <span className="text-[#f5e6c8] text-sm">{user?.email}</span>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b border-[rgba(200,150,62,0.08)]">
@@ -640,7 +619,7 @@ const Profile = () => {
                     <AtSign className="w-3.5 h-3.5 text-[#c8963e]" />
                     Username
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">@{displayUser?.username || 'Not provided'}</span>
+                  <span className="text-[#f5e6c8] text-sm">@{user?.username}</span>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b border-[rgba(200,150,62,0.08)]">
@@ -648,7 +627,7 @@ const Profile = () => {
                     <Phone className="w-3.5 h-3.5 text-[#c8963e]" />
                     Phone
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">{displayUser?.phone || 'Not provided'}</span>
+                  <span className="text-[#f5e6c8] text-sm">{user?.phone || 'Not provided'}</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
@@ -657,7 +636,7 @@ const Profile = () => {
                       <Cake className="w-3.5 h-3.5 text-[#c8963e]" />
                       Age
                     </span>
-                    <span className="text-[#f5e6c8] text-sm">{displayUser?.age || 'Not provided'}</span>
+                    <span className="text-[#f5e6c8] text-sm">{user?.age || 'Not provided'}</span>
                   </div>
 
                   <div className="flex items-center justify-between py-3 border-b border-[rgba(200,150,62,0.08)] sm:pl-6">
@@ -665,7 +644,7 @@ const Profile = () => {
                       <Home className="w-3.5 h-3.5 text-[#c8963e]" />
                       City
                     </span>
-                    <span className="text-[#f5e6c8] text-sm">{displayUser?.city || 'Not provided'}</span>
+                    <span className="text-[#f5e6c8] text-sm">{user?.city || 'Not provided'}</span>
                   </div>
                 </div>
 
@@ -674,16 +653,16 @@ const Profile = () => {
                     <Briefcase className="w-3.5 h-3.5 text-[#c8963e]" />
                     Profession
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">{displayUser?.profession || 'Not provided'}</span>
+                  <span className="text-[#f5e6c8] text-sm">{user?.profession || 'Not provided'}</span>
                 </div>
 
-                {displayUser?.bio && (
+                {user?.bio && (
                   <div className="flex items-start justify-between py-3 border-b border-[rgba(200,150,62,0.08)]">
                     <span className="text-[#d4b8a0] text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
                       <FileText className="w-3.5 h-3.5 text-[#c8963e]" />
                       Bio
                     </span>
-                    <span className="text-[#f5e6c8] text-sm text-right max-w-[60%]">{displayUser.bio}</span>
+                    <span className="text-[#f5e6c8] text-sm text-right max-w-[60%]">{user.bio}</span>
                   </div>
                 )}
 
@@ -693,7 +672,7 @@ const Profile = () => {
                     Member Since
                   </span>
                   <span className="text-[#f5e6c8] text-sm">
-                    {displayUser?.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('en-US', {
+                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -723,31 +702,6 @@ const Profile = () => {
           )}
         </div>
       </div>
-
-      {/* Image Preview Modal */}
-      {showImageModal && profilePicturePreview && (
-        <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center z-50 animate-fade-in"
-          onClick={() => setShowImageModal(false)}
-        >
-          <div 
-            className="relative max-w-2xl max-h-[90vh] p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowImageModal(false)}
-              className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
-            >
-              <X className="w-8 h-8" />
-            </button>
-            <img 
-              src={profilePicturePreview} 
-              alt="Profile" 
-              className="w-full h-full object-contain rounded-2xl shadow-[0_0_60px_rgba(200,150,62,0.15)]"
-            />
-          </div>
-        </div>
-      )}
 
       {/* Logout Modal */}
       {showLogoutModal && (
