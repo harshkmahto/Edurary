@@ -37,7 +37,7 @@ if(!process.env.IMAGEKIT_URL_ENDPOINT){
 
 
 
-const cofig = {
+const config = {
     DB_URI: process.env.DB_URI,
     JWT_SECRET: process.env.JWT_SECRET,
     EMAIL_USER: process.env.EMAIL_USER,
@@ -49,4 +49,4 @@ const cofig = {
     
 }
 
-export default cofig;
+export default config;

@@ -13,12 +13,7 @@ async function connectDB() {
   }
 
   if (!cached.promise) {
-    const MONGODB_URI = process.env.MONGODB_URI || config.DB_URI;
-
-    cached.promise = mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }).then((mongoose) => {
+    cached.promise = mongoose.connect(config.DB_URI).then((mongoose) => {
       return mongoose;
     });
   }
