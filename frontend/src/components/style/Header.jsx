@@ -177,7 +177,7 @@ const Header = () => {
                              items-center justify-center transition-all duration-300">
               {user.profilePicture ? 
               (
-                <img src={user.profilePicture} className='w-4 h-4 object-cover' />
+                <img src={user.profilePicture} className='w-8 h-8 object-cover' />
               ):(
               <User className="w-4 h-4" />
               )}

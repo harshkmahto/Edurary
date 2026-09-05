@@ -59,6 +59,7 @@ const Profile = () => {
   const [isUsernameChecking, setIsUsernameChecking] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [remainingDays, setRemainingDays] = useState(0);
+  const [showImageModal, setShowImageModal] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -138,6 +139,18 @@ const Profile = () => {
         setProfilePicturePreview(e.target.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfilePictureClick = () => {
+    if (editing) {
+      // In edit mode: open file upload
+      fileInputRef.current?.click();
+    } else {
+      // In view mode: open image popup
+      if (profilePicturePreview) {
+        setShowImageModal(true);
+      }
     }
   };
 
@@ -323,7 +336,7 @@ const Profile = () => {
               </span>
             </div>
 
-            {/* Avatar with Upload */}
+            {/* Avatar with Click Handler */}
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-[#c8963e]/20 rounded-full blur-2xl animate-pulse" />
               <div 
@@ -333,8 +346,8 @@ const Profile = () => {
                           flex items-center justify-center
                           shadow-[0_0_40px_rgba(200,150,62,0.15)]
                           transition-transform duration-300 hover:scale-105
-                          overflow-hidden cursor-pointer group"
-                onClick={() => fileInputRef.current?.click()}
+                          overflow-hidden cursor-pointer"
+                onClick={handleProfilePictureClick}
               >
                 {profilePicturePreview ? (
                   <img 
@@ -347,9 +360,12 @@ const Profile = () => {
                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-white" />
-                </div>
+                {/* Camera icon only shown in edit mode */}
+                {editing && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
+                )}
               </div>
               <input
                 ref={fileInputRef}
@@ -376,7 +392,7 @@ const Profile = () => {
               <AtSign className="w-3.5 h-3.5 text-[#c8963e]" />
               {user?.username}
             </p>
-              <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
+            <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
               <StarCheck className="w-3.5 h-3.5 text-[#c8963e]" />
               {user?.bio}
             </p>
@@ -702,6 +718,31 @@ const Profile = () => {
           )}
         </div>
       </div>
+
+      {/* Image Preview Modal - Only in view mode */}
+      {showImageModal && (
+        <div 
+          className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center z-50 animate-fade-in"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div 
+            className="relative max-w-2xl max-h-[90vh] p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <img 
+              src={profilePicturePreview} 
+              alt="Profile" 
+              className="w-full h-full object-contain rounded-2xl shadow-[0_0_60px_rgba(200,150,62,0.15)]"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Logout Modal */}
       {showLogoutModal && (
