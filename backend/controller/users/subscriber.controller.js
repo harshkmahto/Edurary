@@ -246,7 +246,6 @@ export const getUserSubscriptions = async (req, res) => {
         const subscriptions = await Subscriber.find({
             userId: userId
         })
-        .populate('subscriptionId', 'title icon features about')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit));
@@ -347,7 +346,7 @@ export const getSubscriberById = async (req, res) => {
         }
 
         const subscriber = await Subscriber.findById(id)
-            .populate('subscriptionId', 'title icon features about price sellingPrice validity');
+            .populate('subscriptionId', 'id _id title icon features  about price sellingPrice validity');
 
         if (!subscriber) {
             return res.status(404).json({
