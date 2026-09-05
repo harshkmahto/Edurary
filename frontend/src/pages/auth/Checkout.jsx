@@ -48,53 +48,69 @@ const Checkout = () => {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [activeSubscription, setActiveSubscription] = useState(null);
 
-  useEffect(() => {
-    if (authLoading) return;
+useEffect(() => {
+  if (authLoading) return;
 
-    if (!isAuthenticated) {
-      toast.error('Please sign in to continue');
-      navigate('/auth/signin');
-      return;
+  if (!isAuthenticated) {
+    toast.error('Please sign in to continue');
+    navigate('/auth/signin');
+    return;
+  }
+
+  if (user) {
+    const userPhone = user.phone || user.mobile || user.phoneNumber || user.contact || '';
+    setPhoneNumber(userPhone);
+    setEmailAddress(user.email || '');
+    
+    if (user.hasActiveSubscription && user.activeSubscriptionId) {
+      setHasActiveSubscription(true);
+      fetchActiveSubscription();
     }
+  }
 
-    if (user) {
-      const userPhone = user.phone || user.mobile || user.phoneNumber || user.contact || '';
-      setPhoneNumber(userPhone);
-      setEmailAddress(user.email || '');
-      
-      // Check if user has active subscription
-      if (user.hasActiveSubscription && user.activeSubscriptionId) {
-        setHasActiveSubscription(true);
-        fetchActiveSubscription();
-      }
-    }
+  // ✅ Check if this is a resume payment
+  if (resumeSubscriberId) {
+    setIsResumeMode(true);
+    fetchPendingSubscriber(resumeSubscriberId);
+  }
 
-    // ✅ Check if this is a resume payment
-    if (resumeSubscriberId) {
-      setIsResumeMode(true);
-      fetchPendingSubscriber(resumeSubscriberId);
-    }
+  // ✅ Make sure id is valid
+  if (id) {
+    fetchPlanDetails(id); // Pass id explicitly
+    fetchUpiDetails();
+  } else {
+    setError('No plan selected');
+    setLoading(false);
+  }
+}, [id, isAuthenticated, authLoading, user, resumeSubscriberId]);
 
-    if (id) {
-      fetchPlanDetails();
-      fetchUpiDetails();
+const fetchPlanDetails = async (planId) => {
+  try {
+    setLoading(true);
+    setError(null);
+    const response = await authService.getSubscriptionById(planId);
+    
+    if (response?.success && response?.subscription) {
+      setPlan(response.subscription);
     } else {
-      setError('No plan selected');
-      setLoading(false);
+      setError(response?.message || 'Plan not found');
     }
-  }, [id, isAuthenticated, authLoading, user, resumeSubscriberId]);
-
-  // ✅ New: Fetch pending subscriber for resume
+  } catch (error) {
+    console.error('Error fetching plan:', error);
+    setError(error.message || 'Failed to fetch plan details');
+    toast.error('Failed to load plan details');
+  } finally {
+    setLoading(false);
+  }
+};
   const fetchPendingSubscriber = async (subscriberId) => {
     try {
       const response = await authService.getSubscriberById(subscriberId);
       if (response?.success) {
         const subscriber = response.data;
-        // Check if subscriber is actually pending
         if (subscriber.paymentStatus === 'pending') {
           setPendingSubscriber(subscriber);
           setSubscriberId(subscriberId);
-          // Set phone and email from subscriber
           if (subscriber.userPhone) setPhoneNumber(subscriber.userPhone);
           if (subscriber.userEmail) setEmailAddress(subscriber.userEmail);
           toast.success('Resuming your pending payment');

@@ -1,4 +1,3 @@
-// pages/user/MyOrders.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -213,10 +212,23 @@ const MyOrders = () => {
     }
   };
 
-  // ✅ NEW: Handle Pay Now button click
-  const handlePayNow = (subscriberId, subscriptionId) => {
+  // ✅ FIXED: Handle Pay Now button click - Extract ID properly
+  const handlePayNow = (subscriberId, subscriptionData) => {
+    // Extract the subscription ID properly
+    let subId = subscriptionData;
+    
+    // If subscriptionData is an object with _id property, extract it
+    if (typeof subscriptionData === 'object' && subscriptionData !== null) {
+      subId = subscriptionData._id || subscriptionData.id || subscriptionData;
+    }
+    
+    // If it's still an object, convert to string (fallback)
+    if (typeof subId === 'object') {
+      subId = subId.toString();
+    }
+    
     // Navigate to checkout with resume parameter
-    navigate(`/checkout/${subscriptionId}?resume=${subscriberId}`);
+    navigate(`/checkout/${subId}?resume=${subscriberId}`);
   };
 
   // Loading State
@@ -452,7 +464,7 @@ const MyOrders = () => {
                           {getStatusLabel(paymentStatus)}
                         </span>
                         
-                        {/* ✅ NEW: Pay Now Button for pending payments */}
+                        {/* ✅ Pay Now Button for pending payments */}
                         {isPaymentPending && (
                           <button
                             onClick={(e) => {
@@ -622,7 +634,7 @@ const MyOrders = () => {
                         </div>
                       </div>
 
-                      {/* ✅ NEW: Pay Now Button in Expanded Section (for larger view) */}
+                      {/* ✅ Pay Now Button in Expanded Section */}
                       {isPaymentPending && (
                         <div className="flex justify-end">
                           <button
