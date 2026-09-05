@@ -10,8 +10,6 @@ import {
 import { useAuth } from '../../context/authContext';
 import authService from '../../services/auth.service';
 import toast from 'react-hot-toast';
-
-// Import invoice generator
 import { generateInvoicePDF } from '../../helper/generateInvoicePdf';
 
 const MyOrders = () => {
@@ -182,23 +180,16 @@ const MyOrders = () => {
     setLoading(false);
   };
 
-  // Check if invoice can be downloaded
   const canDownloadInvoice = (sub) => {
     const paymentStatus = sub.paymentStatus || 'pending';
-    // Only allow download if payment is success or failed (not pending or review)
     return paymentStatus === 'success' || paymentStatus === 'failed';
   };
 
-  // Handle invoice download
   const handleDownloadInvoice = async (subscriberId) => {
     try {
       setDownloadingInvoice(subscriberId);
-      
-      // Fetch invoice data
       const response = await authService.getInvoice(subscriberId);
-      
       if (response?.success && response?.data) {
-        // Generate and download PDF
         await generateInvoicePDF(response.data);
         toast.success('Invoice downloaded successfully');
       } else {
@@ -212,28 +203,26 @@ const MyOrders = () => {
     }
   };
 
-const handlePayNow = (subscriberId) => {
-  // ✅ Use the subscriptions state directly
-  const subscriber = subscriptions.find(s => s._id === subscriberId);
-  if (!subscriber) {
-    toast.error('Subscription not found');
-    return;
-  }
-  
-  let subId = subscriber.subscriptionId;
-  if (typeof subId === 'object' && subId !== null) {
-    subId = subId._id || subId;
-  }
-  
-  if (!subId) {
-    toast.error('Unable to process payment');
-    return;
-  }
-  
-  navigate(`/checkout/${String(subId)}?resume=${subscriberId}`);
-};
+  const handlePayNow = (subscriberId, subscriptionData) => {
+    const subscriber = subscriptions.find(s => s._id === subscriberId);
+    if (!subscriber) {
+      toast.error('Subscription not found');
+      return;
+    }
+    
+    let subId = subscriptionData || subscriber.subscriptionId;
+    
+    if (typeof subId === 'object' && subId !== null) {
+      subId = subId._id || subId;
+    }
+    
+    if (subId) {
+      navigate(`/checkout/${String(subId)}?resume=${subscriberId}`);
+    } else {
+      toast.error('Unable to process payment');
+    }
+  };
 
-  // Loading State
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#0a0505] flex items-center justify-center">
@@ -249,7 +238,6 @@ const handlePayNow = (subscriberId) => {
 
   return (
     <div className="min-h-screen bg-[#0a0505] relative overflow-hidden py-8 sm:py-12">
-      {/* Background Gradient Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
                       w-[800px] h-[800px] rounded-full 
@@ -268,7 +256,6 @@ const handlePayNow = (subscriberId) => {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-block mb-4">
             <span className="px-4 py-1.5 rounded-full bg-[#c8963e]/10 border border-[#c8963e]/20 
@@ -292,7 +279,6 @@ const handlePayNow = (subscriberId) => {
           </button>
         </div>
 
-        {/* Active Subscription Banner */}
         {activeSubscription && (
           <div className="mb-8 bg-[#4ade80]/10 border border-[#4ade80]/30 rounded-xl p-4">
             <div className="flex items-start gap-3">
@@ -315,7 +301,6 @@ const handlePayNow = (subscriberId) => {
           </div>
         )}
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
           <div className="bg-[#1a0a0a]/60 backdrop-blur-xl rounded-xl p-4 border border-[#c8963e]/20 shadow-sm">
             <div className="flex items-center gap-3">
@@ -390,7 +375,6 @@ const handlePayNow = (subscriberId) => {
           </div>
         </div>
 
-        {/* Subscriptions List */}
         {subscriptions.length === 0 ? (
           <div className="bg-[#1a0a0a]/40 backdrop-blur-xl rounded-2xl p-16 text-center border border-[#c8963e]/20 shadow-xl">
             <BookOpen className="w-20 h-20 text-[#c8963e]/30 mx-auto mb-4" />
@@ -417,8 +401,6 @@ const handlePayNow = (subscriberId) => {
               const remainingDays = getRemainingDays(sub.endDate);
               const isActive = subStatus === 'active';
               const invoiceAvailable = canDownloadInvoice(sub);
-              
-              // ✅ Check if payment is pending (for Pay Now button)
               const isPaymentPending = paymentStatus === 'pending';
               
               return (
@@ -427,7 +409,6 @@ const handlePayNow = (subscriberId) => {
                   className={`bg-[#1a0a0a]/60 backdrop-blur-xl rounded-xl border shadow-sm hover:shadow-[#c8963e]/10 transition-all duration-300 overflow-hidden
                     ${isActive ? 'border-[#4ade80]/30' : 'border-[#c8963e]/20'}`}
                 >
-                  {/* Card Header - Always Visible */}
                   <div 
                     className="p-4 sm:p-6 cursor-pointer hover:bg-[#c8963e]/5 transition-colors"
                     onClick={() => toggleExpand(sub._id)}
@@ -466,7 +447,6 @@ const handlePayNow = (subscriberId) => {
                           {getStatusLabel(paymentStatus)}
                         </span>
                         
-                        {/* ✅ Pay Now Button for pending payments */}
                         {isPaymentPending && (
                           <button
                             onClick={(e) => {
@@ -491,10 +471,8 @@ const handlePayNow = (subscriberId) => {
                     </div>
                   </div>
 
-                  {/* Expanded Details */}
                   {isExpanded && (
                     <div className="p-4 sm:p-6 pt-0 border-t border-[#c8963e]/10 space-y-4">
-                      {/* User Info */}
                       <div className="bg-[#0a0505]/50 rounded-xl p-4 border border-[#c8963e]/10">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#c8963e] to-[#d4a85a] flex items-center justify-center text-[#0a0505] font-bold text-sm">
@@ -519,7 +497,6 @@ const handlePayNow = (subscriberId) => {
                         </div>
                       </div>
 
-                      {/* Subscription Details */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="bg-[#0a0505]/50 rounded-xl p-4 border border-[#c8963e]/10">
                           <h5 className="text-xs font-semibold text-[#d4b8a0]/60 uppercase tracking-wider flex items-center gap-2 mb-3">
@@ -585,7 +562,6 @@ const handlePayNow = (subscriberId) => {
                         </div>
                       </div>
 
-                      {/* Payment Details */}
                       <div className="bg-[#0a0505]/50 rounded-xl p-4 border border-[#c8963e]/10">
                         <h5 className="text-xs font-semibold text-[#d4b8a0]/60 uppercase tracking-wider flex items-center gap-2 mb-3">
                           <CreditCard className="w-3.5 h-3.5 text-[#d4a85a]" />
@@ -636,7 +612,6 @@ const handlePayNow = (subscriberId) => {
                         </div>
                       </div>
 
-                      {/* ✅ Pay Now Button in Expanded Section */}
                       {isPaymentPending && (
                         <div className="flex justify-end">
                           <button
@@ -652,7 +627,6 @@ const handlePayNow = (subscriberId) => {
                         </div>
                       )}
 
-                      {/* Invoice Download Button */}
                       <div className="flex justify-end">
                         <button
                           onClick={(e) => {
@@ -680,7 +654,6 @@ const handlePayNow = (subscriberId) => {
                         </button>
                       </div>
 
-                      {/* Invoice Availability Note */}
                       {!invoiceAvailable && (
                         <p className="text-xs text-[#d4b8a0]/40 text-right">
                           {paymentStatus === 'pending' ? 'Invoice will be available after payment completion' : 
@@ -696,7 +669,6 @@ const handlePayNow = (subscriberId) => {
           </div>
         )}
 
-        {/* Trust Badges */}
         {subscriptions.length > 0 && (
           <div className="mt-12 text-center">
             <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
