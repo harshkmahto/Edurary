@@ -336,7 +336,7 @@ export const getSubscriptionById = async (req, res) => {
 
         const subscription = await Subscription.findOne({
             _id: id,
-            isActive: true 
+            
         });
 
         if (!subscription) {
