@@ -79,9 +79,6 @@ const Header = () => {
     }
   };
 
-  
-
-
   return (
     <>
       <header 
@@ -99,7 +96,7 @@ const Header = () => {
                             rounded-xl flex items-center justify-center shadow-[0_4px_15px_rgba(200,150,62,0.3)]
                             group-hover:shadow-[0_4px_25px_rgba(200,150,62,0.5)] group-hover:scale-105
                             transition-all duration-300">
-              <img src={logo} className='w-full h-full object-cover'/>
+              <img src={logo} className='w-full h-full object-cover' alt="Logo" />
             </div>
             <div className="flex items-baseline gap-0.5">
               <span className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-[#d4a85a] to-[#e8c87a] 
@@ -174,12 +171,12 @@ const Header = () => {
                              bg-[#2d1810]/30 text-[#d4b8a0] hover:bg-[#c8963e]/15 
                              hover:text-[#d4a85a] hover:border-[#c8963e]/30 hover:-translate-y-0.5 
                              hover:shadow-[0_4px_15px_rgba(200,150,62,0.15)] hover:scale-105
-                             items-center justify-center transition-all duration-300">
-              {user.profilePicture ? 
-              (
-                <img src={user.profilePicture} className='w-8 h-8 object-cover' />
-              ):(
-              <User className="w-4 h-4" />
+                             items-center justify-center transition-all duration-300 overflow-hidden">
+              {/* FIXED: Added null check for user before accessing profilePicture */}
+              {user?.profilePicture ? (
+                <img src={user.profilePicture} className='w-8 h-8 object-cover rounded-full' alt="Profile" />
+              ) : (
+                <User className="w-4 h-4" />
               )}
             </button>
 
@@ -193,11 +190,9 @@ const Header = () => {
               <MenuIcon className="w-4 h-4" />
             </button>
 
-            
-              <Link to="/subscription">
-                <MainButton size='sm' text='SUBSCRIBE' />
-              </Link>
-          
+            <Link to="/subscription">
+              <MainButton size='sm' text='SUBSCRIBE' />
+            </Link>
           </div>
         </div>
       </header>
