@@ -1,6 +1,6 @@
 // Checkout.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { 
   Check, Crown, Sparkles, Zap, Star, Shield, Users, BookOpen, Award, 
   IndianRupee, Calendar, Tag, Info, FileText, List, X, 
@@ -14,12 +14,19 @@ import toast from 'react-hot-toast';
 const Checkout = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const resumeSubscriberId = searchParams.get('resume');
+  
   const { user, isAuthenticated, loading: authLoading, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [plan, setPlan] = useState(null);
   const [error, setError] = useState(null);
   const [subscriberId, setSubscriberId] = useState(null);
+  
+  // Resume mode state
+  const [isResumeMode, setIsResumeMode] = useState(false);
+  const [pendingSubscriber, setPendingSubscriber] = useState(null);
   
   // Phone and email state
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -62,6 +69,12 @@ const Checkout = () => {
       }
     }
 
+    // ✅ Check if this is a resume payment
+    if (resumeSubscriberId) {
+      setIsResumeMode(true);
+      fetchPendingSubscriber(resumeSubscriberId);
+    }
+
     if (id) {
       fetchPlanDetails();
       fetchUpiDetails();
@@ -69,7 +82,42 @@ const Checkout = () => {
       setError('No plan selected');
       setLoading(false);
     }
-  }, [id, isAuthenticated, authLoading, user]);
+  }, [id, isAuthenticated, authLoading, user, resumeSubscriberId]);
+
+  // ✅ New: Fetch pending subscriber for resume
+  const fetchPendingSubscriber = async (subscriberId) => {
+    try {
+      const response = await authService.getSubscriberById(subscriberId);
+      if (response?.success) {
+        const subscriber = response.data;
+        // Check if subscriber is actually pending
+        if (subscriber.paymentStatus === 'pending') {
+          setPendingSubscriber(subscriber);
+          setSubscriberId(subscriberId);
+          // Set phone and email from subscriber
+          if (subscriber.userPhone) setPhoneNumber(subscriber.userPhone);
+          if (subscriber.userEmail) setEmailAddress(subscriber.userEmail);
+          toast.success('Resuming your pending payment');
+        } else if (subscriber.paymentStatus === 'review') {
+          toast.error('This payment is already under review. Please wait for admin verification.');
+          navigate('/subscription');
+        } else if (subscriber.paymentStatus === 'success') {
+          toast.success('This payment is already completed!');
+          navigate('/subscription');
+        } else {
+          toast.error('This subscription is not pending. Please start a new payment.');
+          navigate('/subscription');
+        }
+      } else {
+        toast.error(response?.message || 'Failed to fetch pending subscription');
+        navigate('/subscription');
+      }
+    } catch (error) {
+      console.error('Error fetching pending subscriber:', error);
+      toast.error('Failed to fetch pending payment details');
+      navigate('/subscription');
+    }
+  };
 
   const fetchActiveSubscription = async () => {
     try {
@@ -159,7 +207,7 @@ const Checkout = () => {
       
       if (response?.success) {
         toast.success('Phone number updated successfully');
-        await refreshUser(); // Refresh user data
+        await refreshUser();
         setPhoneNumber(formattedPhone);
         setPhoneUpdateSuccess(true);
         setIsEditingPhone(false);
@@ -177,8 +225,17 @@ const Checkout = () => {
     }
   };
 
+  // ✅ Modified: Handle payment initiation with resume support
   const handlePaymentInit = async () => {
     try {
+      // If in resume mode, just open the modal
+      if (isResumeMode && pendingSubscriber) {
+        setShowPaymentModal(true);
+        setPaymentStep(1);
+        toast.success('Complete your pending payment');
+        return;
+      }
+
       // Check if user already has an active subscription
       if (hasActiveSubscription && activeSubscription) {
         const now = new Date();
@@ -221,10 +278,8 @@ const Checkout = () => {
         setPaymentStep(1);
         toast.success('Please complete the payment');
       } else {
-        // Handle specific error messages
         if (response?.message?.includes('already have an active subscription')) {
           toast.error(response.message, { duration: 5000 });
-          // Refresh user data to update subscription status
           await refreshUser();
         } else {
           toast.error(response?.message || 'Failed to initiate payment');
@@ -232,7 +287,6 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('Error initiating payment:', error);
-      // Check if error message contains subscription info
       if (error.message?.includes('active subscription')) {
         toast.error(error.message, { duration: 5000 });
         await refreshUser();
@@ -309,7 +363,6 @@ const Checkout = () => {
         setTransactionId('');
         setReceiptImage(null);
         setReceiptPreview(null);
-        // Refresh user data to update subscription status
         await refreshUser();
         navigate('/subscription');
       } else {
@@ -333,7 +386,6 @@ const Checkout = () => {
     return phone;
   };
 
-  // Format date for display
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-IN', {
       day: 'numeric',
@@ -342,7 +394,6 @@ const Checkout = () => {
     });
   };
 
-  // Get remaining days
   const getRemainingDays = (endDate) => {
     const now = new Date();
     const end = new Date(endDate);
@@ -426,6 +477,24 @@ const Checkout = () => {
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span>Back to Plans</span>
           </button>
+
+          {/* ✅ NEW: Resume Payment Banner */}
+          {isResumeMode && pendingSubscriber && (
+            <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-[#f5e6d3] font-semibold">Resuming Pending Payment</p>
+                  <p className="text-[#d4b8a0] text-sm">
+                    You have a pending payment of <span className="text-yellow-500 font-medium">₹{pendingSubscriber.sellingPrice || pendingSubscriber.price}</span> for <span className="text-[#d4a85a] font-medium">{pendingSubscriber.planName}</span>
+                  </p>
+                  <p className="text-[#d4b8a0] text-xs mt-1">
+                    Created on {formatDate(pendingSubscriber.createdAt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Active Subscription Warning */}
           {hasActiveSubscription && activeSubscription && (
@@ -535,7 +604,9 @@ const Checkout = () => {
             {/* Right Column - Payment */}
             <div>
               <div className="bg-[#1a0a0a]/60 backdrop-blur-xl rounded-2xl p-6 sm:p-8 border border-[#c8963e]/20 shadow-xl sticky top-8">
-                <h2 className="text-2xl font-bold text-[#f5e6d3] mb-6">Payment Details</h2>
+                <h2 className="text-2xl font-bold text-[#f5e6d3] mb-6">
+                  {isResumeMode ? 'Complete Payment' : 'Payment Details'}
+                </h2>
 
                 {/* User Info with Editable Phone */}
                 <div className="bg-[#0a0505]/50 rounded-xl p-4 mb-6 border border-[#c8963e]/10">
@@ -639,7 +710,7 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Pay Button */}
+                {/* ✅ Modified: Pay Button with Resume Mode support */}
                 <button
                   onClick={handlePaymentInit}
                   disabled={processing || !phoneValid || !emailValid || hasActiveSubscription}
@@ -658,6 +729,11 @@ const Checkout = () => {
                     <span className="flex items-center justify-center gap-2">
                       <AlertCircle className="w-5 h-5" />
                       Already Subscribed
+                    </span>
+                  ) : isResumeMode ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <CreditCard className="w-5 h-5" />
+                      Resume Payment
                     </span>
                   ) : !phoneValid ? (
                     <span className="flex items-center justify-center gap-2">

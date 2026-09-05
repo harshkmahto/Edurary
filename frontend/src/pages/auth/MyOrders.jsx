@@ -6,7 +6,7 @@ import {
   CreditCard, FileText, Eye, Copy, ChevronDown, ChevronUp,
   TrendingUp, Award, Star, Package, Truck, DollarSign, 
   Calendar as CalendarIcon, User, Mail, Phone,
-  Shield, BookOpen, Info, Loader2, Download
+  Shield, BookOpen, Info, Loader2, Download, CreditCard as CreditCardIcon
 } from 'lucide-react';
 import { useAuth } from '../../context/authContext';
 import authService from '../../services/auth.service';
@@ -213,6 +213,12 @@ const MyOrders = () => {
     }
   };
 
+  // ✅ NEW: Handle Pay Now button click
+  const handlePayNow = (subscriberId, subscriptionId) => {
+    // Navigate to checkout with resume parameter
+    navigate(`/checkout/${subscriptionId}?resume=${subscriberId}`);
+  };
+
   // Loading State
   if (authLoading || loading) {
     return (
@@ -398,6 +404,9 @@ const MyOrders = () => {
               const isActive = subStatus === 'active';
               const invoiceAvailable = canDownloadInvoice(sub);
               
+              // ✅ Check if payment is pending (for Pay Now button)
+              const isPaymentPending = paymentStatus === 'pending';
+              
               return (
                 <div 
                   key={sub._id}
@@ -442,6 +451,21 @@ const MyOrders = () => {
                           {getPaymentStatusIcon(paymentStatus)}
                           {getStatusLabel(paymentStatus)}
                         </span>
+                        
+                        {/* ✅ NEW: Pay Now Button for pending payments */}
+                        {isPaymentPending && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePayNow(sub._id, sub.subscriptionId);
+                            }}
+                            className="px-3 py-1.5 bg-gradient-to-r from-[#c8963e] to-[#d4a85a] hover:from-[#b8860b] hover:to-[#c8963e] text-[#0a0505] text-xs font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#c8963e]/30 flex items-center gap-1.5"
+                          >
+                            <CreditCardIcon className="w-3.5 h-3.5" />
+                            Pay Now
+                          </button>
+                        )}
+                        
                         <button className="p-1 hover:bg-[#c8963e]/10 rounded-lg transition-colors">
                           {isExpanded ? (
                             <ChevronUp className="w-5 h-5 text-[#d4b8a0]" />
@@ -597,6 +621,22 @@ const MyOrders = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* ✅ NEW: Pay Now Button in Expanded Section (for larger view) */}
+                      {isPaymentPending && (
+                        <div className="flex justify-end">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePayNow(sub._id, sub.subscriptionId);
+                            }}
+                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#c8963e] to-[#d4a85a] hover:from-[#b8860b] hover:to-[#c8963e] text-[#0a0505] font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#c8963e]/30"
+                          >
+                            <CreditCardIcon className="w-5 h-5" />
+                            Complete Payment Now
+                          </button>
+                        </div>
+                      )}
 
                       {/* Invoice Download Button */}
                       <div className="flex justify-end">

@@ -39,23 +39,31 @@ const Menubar = ({ isOpen, onClose }) => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
+  // ✅ NEW: Handle navigation with menu close
+  const handleNavigation = (path) => {
+    onClose(); // Close menu first
+    navigate(path); // Then navigate
+  };
+
   const mainMenuItems = [
-    { icon: Home, label: 'Home', href: '/', delay: 0 },
-    { icon: BookOpen, label: 'Books', href: '/books', delay: 50 },
-    { icon: FileText, label: 'Materials', href: '/materials', delay: 100 },
-    { icon: GraduationCap, label: 'Courses', href: '/courses', delay: 150 },
-    { icon: Award, label: 'Tests', href: '/tests', delay: 250 },
-    { icon: Library, label: 'About Us', href: '/about', delay: 200 },
-    { icon: Users, label: 'Community', href: '/community', delay: 300 },
-    { icon: BadgeIndianRupeeIcon, label: 'Subscription', href: '/subscription', delay: 400 },
-    { icon: InboxIcon, label: 'Reports', href: '/reports', delay: 350 },
+    { icon: Home, label: 'Home', path: '/', delay: 0 },
+    { icon: BookOpen, label: 'Books', path: '/books', delay: 50 },
+    { icon: FileText, label: 'Materials', path: '/materials', delay: 100 },
+    { icon: GraduationCap, label: 'Courses', path: '/courses', delay: 150 },
+    { icon: Award, label: 'Tests', path: '/tests', delay: 250 },
+    { icon: Library, label: 'About Us', path: '/about', delay: 200 },
+    { icon: Users, label: 'Community', path: '/community', delay: 300 },
+    { icon: BadgeIndianRupeeIcon, label: 'Subscription', path: '/subscription', delay: 400 },
+    { icon: InboxIcon, label: 'Reports', path: '/reports', delay: 350 },
   ];
 
   const logoutHandle = () => {
+    onClose(); // Close menu before logout
     logout();
   };
 
   const loginHandle = () => {
+    onClose(); // ✅ Close menu before navigating to login
     navigate('/auth/signin');
   };
 
@@ -81,7 +89,7 @@ const Menubar = ({ isOpen, onClose }) => {
             <div className="w-10 h-10 bg-gradient-to-br from-[#c8963e] to-[#d4a85a] 
                             rounded-xl flex items-center justify-center
                             shadow-[0_4px_15px_rgba(200,150,62,0.3)]">
-              <img src={logo} className='w-full h-full object-cover' />
+              <img src={logo} className='w-full h-full object-cover' alt="Logo" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-[#d4a85a] to-[#e8c87a] 
                            bg-clip-text text-transparent">
@@ -135,16 +143,15 @@ const Menubar = ({ isOpen, onClose }) => {
             <ul className="space-y-0.5">
               {mainMenuItems.map((item, index) => (
                 <li key={index}>
-                  <a
-                    href={item.href}
-                    className={`group flex items-center justify-between px-3 py-2.5 rounded-xl 
+                  <button
+                    onClick={() => handleNavigation(item.path)}
+                    className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl 
                                text-[#d4b8a0] hover:text-[#d4a85a] hover:bg-[#c8963e]/10 
                                text-sm font-medium
                                hover:translate-x-1 hover:shadow-[0_4px_15px_rgba(200,150,62,0.05)]
                                transition-all duration-300
                                ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}
                     style={{ transitionDelay: `${item.delay}ms` }}
-                    onClick={onClose}
                   >
                     <span className="flex items-center gap-3">
                       <item.icon className="w-4 h-4 text-[#a08070] group-hover:text-[#d4a85a] 
@@ -153,7 +160,7 @@ const Menubar = ({ isOpen, onClose }) => {
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 
                                            transition-all duration-300 group-hover:translate-x-1" />
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -168,16 +175,15 @@ const Menubar = ({ isOpen, onClose }) => {
 
             {user && (
               <div className="mb-2">
-                <a
-                  href="/profile"
-                  className={`group flex items-center justify-between px-3 py-2.5 rounded-xl 
+                <button
+                  onClick={() => handleNavigation('/profile')}
+                  className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl 
                              text-[#d4b8a0] hover:text-[#d4a85a] hover:bg-[#c8963e]/10 
                              text-sm font-medium
                              hover:translate-x-1 hover:shadow-[0_4px_15px_rgba(200,150,62,0.05)]
                              transition-all duration-300
                              ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}
                   style={{ transitionDelay: '550ms' }}
-                  onClick={onClose}
                 >
                   <span className="flex items-center gap-3">
                     <UserPlus className="w-4 h-4 text-[#a08070] group-hover:text-[#d4a85a] 
@@ -186,21 +192,21 @@ const Menubar = ({ isOpen, onClose }) => {
                   </span>
                   <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 
                                          transition-all duration-300 group-hover:translate-x-1" />
-                </a>
+                </button>
+                
                 <div className="px-3 py-1.5 m-1 text-xs text-[#a08070] border border-[#6b1a1a]/20 rounded-lg bg-[#1a0a06]/30">
                   Login as: {user.name}
                 </div>
                
-                <a
-                  href="/orders"
-                  className={`group flex items-center justify-between px-3 py-2.5 rounded-xl 
+                <button
+                  onClick={() => handleNavigation('/orders')}
+                  className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl 
                              text-[#d4b8a0] hover:text-[#d4a85a] hover:bg-[#c8963e]/10 
                              text-sm font-medium
                              hover:translate-x-1 hover:shadow-[0_4px_15px_rgba(200,150,62,0.05)]
                              transition-all duration-300
                              ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}
                   style={{ transitionDelay: '550ms' }}
-                  onClick={onClose}
                 >
                   <span className="flex items-center gap-3">
                     <ShoppingBag className="w-4 h-4 text-[#a08070] group-hover:text-[#d4a85a] 
@@ -209,18 +215,17 @@ const Menubar = ({ isOpen, onClose }) => {
                   </span>
                   <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 
                                          transition-all duration-300 group-hover:translate-x-1" />
-                </a>
+                </button>
 
-                <a
-                  href="/invoices"
-                  className={`group flex items-center justify-between px-3 py-2.5 rounded-xl 
+                <button
+                  onClick={() => handleNavigation('/invoices')}
+                  className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl 
                              text-[#d4b8a0] hover:text-[#d4a85a] hover:bg-[#c8963e]/10 
                              text-sm font-medium
                              hover:translate-x-1 hover:shadow-[0_4px_15px_rgba(200,150,62,0.05)]
                              transition-all duration-300
                              ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}
                   style={{ transitionDelay: '550ms' }}
-                  onClick={onClose}
                 >
                   <span className="flex items-center gap-3">
                     <IndianRupee className="w-4 h-4 text-[#a08070] group-hover:text-[#d4a85a] 
@@ -229,18 +234,17 @@ const Menubar = ({ isOpen, onClose }) => {
                   </span>
                   <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 
                                          transition-all duration-300 group-hover:translate-x-1" />
-                </a>
+                </button>
 
-                <a
-                  href="/save"
-                  className={`group flex items-center justify-between px-3 py-2.5 rounded-xl 
+                <button
+                  onClick={() => handleNavigation('/save')}
+                  className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl 
                              text-[#d4b8a0] hover:text-[#d4a85a] hover:bg-[#c8963e]/10 
                              text-sm font-medium
                              hover:translate-x-1 hover:shadow-[0_4px_15px_rgba(200,150,62,0.05)]
                              transition-all duration-300
                              ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}
                   style={{ transitionDelay: '550ms' }}
-                  onClick={onClose}
                 >
                   <span className="flex items-center gap-3">
                     <Bookmark className="w-4 h-4 text-[#a08070] group-hover:text-[#d4a85a] 
@@ -249,15 +253,15 @@ const Menubar = ({ isOpen, onClose }) => {
                   </span>
                   <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 
                                          transition-all duration-300 group-hover:translate-x-1" />
-                </a>
+                </button>
               </div>
             )}
 
             {user?.role === 'admin' && (
-              <span
-                onClick={() => navigate('/admin')}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl 
-                           text-[#d4b8a0] hover:text-[#d4a85a] hover:bg-[#c8963e]/50 
+              <button
+                onClick={() => handleNavigation('/admin')}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl 
+                           text-[#d4b8a0] hover:text-[#d4a85a] hover:bg-[#c8963e]/10 
                            text-sm font-medium cursor-pointer
                            hover:translate-x-1 hover:shadow-[0_4px_15px_rgba(200,150,62,0.05)]
                            transition-all duration-300
@@ -267,13 +271,13 @@ const Menubar = ({ isOpen, onClose }) => {
                 <Crown className="w-6 h-6 text-[#a08070] group-hover:text-[#d4a85a] 
                                  transition-all duration-300" />
                 Admin
-              </span>
+              </button>
             )}
 
             {user ? (
-              <span
+              <button
                 onClick={logoutHandle}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl 
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl 
                            text-[#d4b8a0] hover:text-[#d5400e] hover:bg-[#c8963e]/10 
                            text-sm font-medium cursor-pointer
                            hover:translate-x-1 hover:shadow-[0_4px_15px_rgba(200,150,62,0.05)]
@@ -284,11 +288,11 @@ const Menubar = ({ isOpen, onClose }) => {
                 <LogOut className="w-4 h-4 text-[#a08070] group-hover:text-[#d4a85a] 
                                   transition-all duration-300" />
                 Logout
-              </span>
+              </button>
             ) : (
-              <span
+              <button
                 onClick={loginHandle}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl 
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl 
                            text-[#d4b8a0] hover:text-[#d4a85a] hover:bg-[#c8963e]/10 
                            text-sm font-medium cursor-pointer
                            hover:translate-x-1 hover:shadow-[0_4px_15px_rgba(200,150,62,0.05)]
@@ -299,7 +303,7 @@ const Menubar = ({ isOpen, onClose }) => {
                 <LogIn className="w-4 h-4 text-[#a08070] group-hover:text-[#d4a85a] 
                                  transition-all duration-300" />
                 Login
-              </span>
+              </button>
             )}
           </div>
         </div>
