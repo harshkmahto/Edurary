@@ -17,7 +17,9 @@ import {
   SavePlus,
   LucideSave,
   Bookmark,
-  IndianRupee
+  IndianRupee,
+  Search,
+  UserCircle
 } from 'lucide-react';
 import { useTheme } from '../../context/DarkModeContext';
 import { useAuth } from '../../context/authContext';
@@ -39,31 +41,30 @@ const Menubar = ({ isOpen, onClose }) => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  // ✅ NEW: Handle navigation with menu close
+  // Handle navigation with menu close
   const handleNavigation = (path) => {
-    onClose(); // Close menu first
-    navigate(path); // Then navigate
+    onClose();
+    navigate(path);
   };
 
   const mainMenuItems = [
     { icon: Home, label: 'Home', path: '/', delay: 0 },
+    { icon: Search, label: 'Search', path: '/search', delay: 50 },
     { icon: BookOpen, label: 'Books', path: '/books', delay: 50 },
-    { icon: FileText, label: 'Materials', path: '/materials', delay: 100 },
     { icon: GraduationCap, label: 'Courses', path: '/courses', delay: 150 },
     { icon: Award, label: 'Tests', path: '/tests', delay: 250 },
     { icon: Library, label: 'About Us', path: '/about', delay: 200 },
-    { icon: Users, label: 'Community', path: '/community', delay: 300 },
     { icon: BadgeIndianRupeeIcon, label: 'Subscription', path: '/subscription', delay: 400 },
     { icon: InboxIcon, label: 'Reports', path: '/reports', delay: 350 },
   ];
 
   const logoutHandle = () => {
-    onClose(); // Close menu before logout
+    onClose();
     logout();
   };
 
   const loginHandle = () => {
-    onClose(); // ✅ Close menu before navigating to login
+    onClose();
     navigate('/auth/signin');
   };
 
@@ -109,33 +110,7 @@ const Menubar = ({ isOpen, onClose }) => {
         </div>
 
         <div className="flex-1 py-4 overflow-y-auto menubar-scroll">
-          <div className="mb-6 p-3 rounded-xl bg-[#1a0a06]/50 border border-[#6b1a1a]/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {isDark ? (
-                  <Moon className="w-4 h-4 text-[#d4a85a]" />
-                ) : (
-                  <Sun className="w-4 h-4 text-[#d4a85a]" />
-                )}
-                <span className="text-sm font-medium text-[#d4b8a0]">
-                  {isDark ? 'Dark Mode' : 'Light Mode'}
-                </span>
-              </div>
-              <button
-                onClick={toggleTheme}
-                className={`relative w-12 h-6 rounded-full transition-all duration-300
-                          ${isDark ? 'bg-[#c8963e]' : 'bg-[#6b1a1a]'}
-                          shadow-[0_0_20px_rgba(200,150,62,0.2)]`}
-              >
-                <div
-                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white 
-                            shadow-md transition-all duration-300
-                            ${isDark ? 'left-6' : 'left-0.5'}`}
-                />
-              </button>
-            </div>
-          </div>
-
+          {/* MAIN MENU SECTION */}
           <div className="mb-6">
             <h3 className="text-xs font-semibold uppercase tracking-[1.5px] text-[#a08070] pl-2 mb-3">
               Main Menu
@@ -168,13 +143,35 @@ const Menubar = ({ isOpen, onClose }) => {
 
           <div className="h-px bg-gradient-to-r from-transparent via-[#6b1a1a]/30 to-transparent my-4" />
 
+          {/* ACCOUNT SECTION */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-[1.5px] text-[#a08070] pl-2 mb-3">
               Account
             </h3>
 
             {user && (
-              <div className="mb-2">
+              <div className="mb-4">
+                {/* Profile Header with Avatar, Name, and Email */}
+                <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-[#1a0a06]/30 border border-[#6b1a1a]/20 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#c8963e] to-[#d4a85a] 
+                                flex items-center justify-center shadow-[0_4px_15px_rgba(200,150,62,0.2)]
+                                overflow-hidden border-2 border-[#c8963e]/30">
+                    {user.profilePicture ? (
+                      <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <UserCircle className="w-8 h-8 text-white" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#d4b8a0] truncate">
+                      {user.name || 'User'}
+                    </p>
+                    <p className="text-xs text-[#a08070] truncate">
+                      {user.email || 'user@example.com'}
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   onClick={() => handleNavigation('/profile')}
                   className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl 
@@ -193,11 +190,7 @@ const Menubar = ({ isOpen, onClose }) => {
                   <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 
                                          transition-all duration-300 group-hover:translate-x-1" />
                 </button>
-                
-                <div className="px-3 py-1.5 m-1 text-xs text-[#a08070] border border-[#6b1a1a]/20 rounded-lg bg-[#1a0a06]/30">
-                  Login as: {user.name}
-                </div>
-               
+
                 <button
                   onClick={() => handleNavigation('/orders')}
                   className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl 
@@ -274,6 +267,37 @@ const Menubar = ({ isOpen, onClose }) => {
               </button>
             )}
 
+            {/* DARK/LIGHT MODE TOGGLE - MOVED TO BOTTOM */}
+            <div className="mt-4 p-3 rounded-xl bg-[#1a0a06]/50 border border-[#6b1a1a]/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isDark ? (
+                    <Moon className="w-4 h-4 text-[#d4a85a]" />
+                  ) : (
+                    <Sun className="w-4 h-4 text-[#d4a85a]" />
+                  )}
+                  <span className="text-sm font-medium text-[#d4b8a0]">
+                    {isDark ? 'Dark Mode' : 'Light Mode'}
+                  </span>
+                </div>
+                <button
+                  onClick={toggleTheme}
+                  className={`relative w-12 h-6 rounded-full transition-all duration-300
+                            ${isDark ? 'bg-[#c8963e]' : 'bg-[#6b1a1a]'}
+                            shadow-[0_0_20px_rgba(200,150,62,0.2)]`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-5 h-5 rounded-full bg-white 
+                              shadow-md transition-all duration-300
+                              ${isDark ? 'left-6' : 'left-0.5'}`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <div className="h-px bg-gradient-to-r from-transparent via-[#6b1a1a]/30 to-transparent my-4" />
+
+            {/* LOGIN/LOGOUT BUTTONS */}
             {user ? (
               <button
                 onClick={logoutHandle}

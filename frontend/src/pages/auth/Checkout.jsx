@@ -1,4 +1,3 @@
-// Checkout.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { 
@@ -24,85 +23,80 @@ const Checkout = () => {
   const [error, setError] = useState(null);
   const [subscriberId, setSubscriberId] = useState(null);
   
-  // Resume mode state
   const [isResumeMode, setIsResumeMode] = useState(false);
   const [pendingSubscriber, setPendingSubscriber] = useState(null);
   
-  // Phone and email state
   const [phoneNumber, setPhoneNumber] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
   const [phoneUpdateSuccess, setPhoneUpdateSuccess] = useState(false);
 
-  // Payment modal states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentStep, setPaymentStep] = useState(1); // 1: QR Code, 2: Transaction ID, 3: Upload Receipt
+  const [paymentStep, setPaymentStep] = useState(1);
   const [transactionId, setTransactionId] = useState('');
   const [receiptImage, setReceiptImage] = useState(null);
   const [receiptPreview, setReceiptPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [upiId, setUpiId] = useState('');
 
-  // Check for existing active subscription
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [activeSubscription, setActiveSubscription] = useState(null);
 
-useEffect(() => {
-  if (authLoading) return;
+  useEffect(() => {
+    if (authLoading) return;
 
-  if (!isAuthenticated) {
-    toast.error('Please sign in to continue');
-    navigate('/auth/signin');
-    return;
-  }
-
-  if (user) {
-    const userPhone = user.phone || user.mobile || user.phoneNumber || user.contact || '';
-    setPhoneNumber(userPhone);
-    setEmailAddress(user.email || '');
-    
-    if (user.hasActiveSubscription && user.activeSubscriptionId) {
-      setHasActiveSubscription(true);
-      fetchActiveSubscription();
+    if (!isAuthenticated) {
+      toast.error('Please sign in to continue');
+      navigate('/auth/signin');
+      return;
     }
-  }
 
-  // ✅ Check if this is a resume payment
-  if (resumeSubscriberId) {
-    setIsResumeMode(true);
-    fetchPendingSubscriber(resumeSubscriberId);
-  }
+    if (user) {
+      const userPhone = user.phone || user.mobile || user.phoneNumber || user.contact || '';
+      setPhoneNumber(userPhone);
+      setEmailAddress(user.email || '');
+      
+      if (user.hasActiveSubscription && user.activeSubscriptionId) {
+        setHasActiveSubscription(true);
+        fetchActiveSubscription();
+      }
+    }
 
-  // ✅ Make sure id is valid
-  if (id) {
-    fetchPlanDetails(id); // Pass id explicitly
-    fetchUpiDetails();
-  } else {
-    setError('No plan selected');
-    setLoading(false);
-  }
-}, [id, isAuthenticated, authLoading, user, resumeSubscriberId]);
+    if (resumeSubscriberId) {
+      setIsResumeMode(true);
+      fetchPendingSubscriber(resumeSubscriberId);
+    }
 
-const fetchPlanDetails = async (planId) => {
-  try {
-    setLoading(true);
-    setError(null);
-    const response = await authService.getSubscriptionById(planId);
-    
-    if (response?.success && response?.subscription) {
-      setPlan(response.subscription);
+    if (id) {
+      fetchPlanDetails(id);
+      fetchUpiDetails();
     } else {
-      setError(response?.message || 'Plan not found');
+      setError('No plan selected');
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching plan:', error);
-    setError(error.message || 'Failed to fetch plan details');
-    toast.error('Failed to load plan details');
-  } finally {
-    setLoading(false);
-  }
-};
+  }, [id, isAuthenticated, authLoading, user, resumeSubscriberId]);
+
+  const fetchPlanDetails = async (planId) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await authService.getSubscriptionById(planId);
+      
+      if (response?.success && response?.subscription) {
+        setPlan(response.subscription);
+      } else {
+        setError(response?.message || 'Plan not found');
+      }
+    } catch (error) {
+      console.error('Error fetching plan:', error);
+      setError(error.message || 'Failed to fetch plan details');
+      toast.error('Failed to load plan details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchPendingSubscriber = async (subscriberId) => {
     try {
       const response = await authService.getSubscriberById(subscriberId);
@@ -116,22 +110,22 @@ const fetchPlanDetails = async (planId) => {
           toast.success('Resuming your pending payment');
         } else if (subscriber.paymentStatus === 'review') {
           toast.error('This payment is already under review. Please wait for admin verification.');
-          navigate('/subscription');
+          navigate('/orders');
         } else if (subscriber.paymentStatus === 'success') {
           toast.success('This payment is already completed!');
-          navigate('/subscription');
+          navigate('/orders');
         } else {
           toast.error('This subscription is not pending. Please start a new payment.');
-          navigate('/subscription');
+          navigate('/orders');
         }
       } else {
         toast.error(response?.message || 'Failed to fetch pending subscription');
-        navigate('/subscription');
+        navigate('/orders');
       }
     } catch (error) {
       console.error('Error fetching pending subscriber:', error);
       toast.error('Failed to fetch pending payment details');
-      navigate('/subscription');
+      navigate('/orders');
     }
   };
 
@@ -143,26 +137,6 @@ const fetchPlanDetails = async (planId) => {
       }
     } catch (error) {
       console.error('Error fetching active subscription:', error);
-    }
-  };
-
-  const fetchPlanDetails = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await authService.getSubscriptionById(id);
-      
-      if (response?.success && response?.subscription) {
-        setPlan(response.subscription);
-      } else {
-        setError(response?.message || 'Plan not found');
-      }
-    } catch (error) {
-      console.error('Error fetching plan:', error);
-      setError(error.message || 'Failed to fetch plan details');
-      toast.error('Failed to load plan details');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -241,10 +215,8 @@ const fetchPlanDetails = async (planId) => {
     }
   };
 
-  // ✅ Modified: Handle payment initiation with resume support
   const handlePaymentInit = async () => {
     try {
-      // If in resume mode, just open the modal
       if (isResumeMode && pendingSubscriber) {
         setShowPaymentModal(true);
         setPaymentStep(1);
@@ -252,7 +224,6 @@ const fetchPlanDetails = async (planId) => {
         return;
       }
 
-      // Check if user already has an active subscription
       if (hasActiveSubscription && activeSubscription) {
         const now = new Date();
         const endDate = new Date(activeSubscription.endDate);
@@ -266,7 +237,6 @@ const fetchPlanDetails = async (planId) => {
         }
       }
 
-      // Validate phone and email
       let rawPhone = phoneNumber || user?.phone || user?.mobile || '';
       const cleanedPhone = rawPhone.replace(/\D/g, '');
       if (cleanedPhone.length < 10) {
@@ -281,7 +251,6 @@ const fetchPlanDetails = async (planId) => {
 
       setProcessing(true);
 
-      // Create subscriber record
       const response = await authService.createSubscriber({
         subscriptionId: id,
         phone: formatPhoneNumber(cleanedPhone),
@@ -380,7 +349,7 @@ const fetchPlanDetails = async (planId) => {
         setReceiptImage(null);
         setReceiptPreview(null);
         await refreshUser();
-        navigate('/subscription');
+        navigate('/orders');
       } else {
         toast.error(response?.message || 'Failed to submit payment proof');
       }
@@ -418,7 +387,6 @@ const fetchPlanDetails = async (planId) => {
     return diffDays;
   };
 
-  // Loading State
   if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-[#0a0505] flex items-center justify-center">
@@ -430,7 +398,6 @@ const fetchPlanDetails = async (planId) => {
     );
   }
 
-  // Error State
   if (error || !plan) {
     return (
       <div className="min-h-screen bg-[#0a0505] flex items-center justify-center p-6">
@@ -442,7 +409,7 @@ const fetchPlanDetails = async (planId) => {
             <button
               onClick={() => {
                 setError(null);
-                fetchPlanDetails();
+                fetchPlanDetails(id);
               }}
               className="w-full px-6 py-3 bg-gradient-to-r from-[#c8963e] to-[#d4a85a] hover:from-[#b8860b] hover:to-[#c8963e] text-[#0a0505] font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#c8963e]/30"
             >
@@ -470,7 +437,6 @@ const fetchPlanDetails = async (planId) => {
   return (
     <>
       <div className="min-h-screen bg-[#0a0505] relative overflow-hidden py-8 sm:py-12">
-        {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
                         w-[600px] h-[600px] rounded-full 
@@ -485,7 +451,6 @@ const fetchPlanDetails = async (planId) => {
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
-          {/* Back Button */}
           <button
             onClick={() => navigate('/subscription')}
             className="flex items-center gap-2 text-[#d4b8a0] hover:text-[#d4a85a] transition-colors mb-6 group"
@@ -494,7 +459,6 @@ const fetchPlanDetails = async (planId) => {
             <span>Back to Plans</span>
           </button>
 
-          {/* ✅ NEW: Resume Payment Banner */}
           {isResumeMode && pendingSubscriber && (
             <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
               <div className="flex items-start gap-3">
@@ -512,7 +476,6 @@ const fetchPlanDetails = async (planId) => {
             </div>
           )}
 
-          {/* Active Subscription Warning */}
           {hasActiveSubscription && activeSubscription && (
             <div className="mb-6 bg-[#c8963e]/10 border border-[#c8963e]/30 rounded-xl p-4">
               <div className="flex items-start gap-3">
@@ -539,12 +502,10 @@ const fetchPlanDetails = async (planId) => {
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Plan Details */}
             <div>
               <div className="bg-[#1a0a0a]/60 backdrop-blur-xl rounded-2xl p-6 sm:p-8 border border-[#c8963e]/20 shadow-xl">
                 <h2 className="text-2xl font-bold text-[#f5e6d3] mb-6">Order Summary</h2>
                 
-                {/* Plan Card */}
                 <div className="bg-[#0a0505]/50 rounded-xl p-6 border border-[#c8963e]/10">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 rounded-xl bg-[#c8963e]/10 border border-[#c8963e]/20 flex items-center justify-center text-2xl">
@@ -570,13 +531,11 @@ const fetchPlanDetails = async (planId) => {
                     </div>
                   </div>
 
-                  {/* Validity */}
                   <div className="flex items-center gap-2 text-sm text-[#d4b8a0] mb-3">
                     <Clock className="w-4 h-4 text-[#d4a85a]" />
                     <span>Valid for {plan.validity?.value} {plan.validity?.unit}{plan.validity?.value > 1 ? 's' : ''}</span>
                   </div>
 
-                  {/* Features */}
                   {plan.features?.length > 0 && (
                     <div className="space-y-2">
                       <p className="text-xs font-medium text-[#d4b8a0]/60">What's included:</p>
@@ -597,7 +556,6 @@ const fetchPlanDetails = async (planId) => {
                   )}
                 </div>
 
-                {/* Price Breakdown */}
                 <div className="mt-6 space-y-3">
                   <div className="flex justify-between text-[#d4b8a0] text-sm">
                     <span>Subtotal</span>
@@ -617,21 +575,18 @@ const fetchPlanDetails = async (planId) => {
               </div>
             </div>
 
-            {/* Right Column - Payment */}
             <div>
               <div className="bg-[#1a0a0a]/60 backdrop-blur-xl rounded-2xl p-6 sm:p-8 border border-[#c8963e]/20 shadow-xl sticky top-8">
                 <h2 className="text-2xl font-bold text-[#f5e6d3] mb-6">
                   {isResumeMode ? 'Complete Payment' : 'Payment Details'}
                 </h2>
 
-                {/* User Info with Editable Phone */}
                 <div className="bg-[#0a0505]/50 rounded-xl p-4 mb-6 border border-[#c8963e]/10">
                   <p className="text-xs text-[#d4b8a0]/60 mb-3 flex items-center gap-2">
                     <User className="w-3 h-3" />
                     Contact Details
                   </p>
                   
-                  {/* Name */}
                   <div className="flex items-center gap-2 mb-3">
                     <User className="w-4 h-4 text-[#d4b8a0]/40" />
                     <div>
@@ -639,7 +594,6 @@ const fetchPlanDetails = async (planId) => {
                     </div>
                   </div>
 
-                  {/* Email */}
                   <div className="flex items-center gap-2 mb-3">
                     <Mail className="w-4 h-4 text-[#d4b8a0]/40" />
                     <div className="flex-1">
@@ -660,7 +614,6 @@ const fetchPlanDetails = async (planId) => {
                     )}
                   </div>
 
-                  {/* Phone */}
                   <div className="flex items-start gap-2">
                     <Phone className="w-4 h-4 text-[#d4b8a0]/40 mt-2" />
                     <div className="flex-1">
@@ -726,7 +679,6 @@ const fetchPlanDetails = async (planId) => {
                   </div>
                 </div>
 
-                {/* ✅ Modified: Pay Button with Resume Mode support */}
                 <button
                   onClick={handlePaymentInit}
                   disabled={processing || !phoneValid || !emailValid || hasActiveSubscription}
@@ -769,13 +721,11 @@ const fetchPlanDetails = async (planId) => {
                   )}
                 </button>
 
-                {/* Security Badge */}
                 <div className="flex items-center justify-center gap-2 mt-4 text-[#d4b8a0]/40 text-xs">
                   <Lock className="w-3 h-3" />
                   <span>Your payment is secure and encrypted</span>
                 </div>
 
-                {/* Terms */}
                 <p className="text-[#8b6b5a] text-xs text-center mt-3">
                   By proceeding, you agree to our Terms of Service and Privacy Policy
                 </p>
@@ -785,11 +735,9 @@ const fetchPlanDetails = async (planId) => {
         </div>
       </div>
 
-      {/* Payment Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-[#1a0a0a] rounded-2xl max-w-lg w-full border border-[#c8963e]/20 shadow-2xl overflow-hidden">
-            {/* Modal Header */}
             <div className="p-6 border-b border-[#c8963e]/10 flex items-center justify-between">
               <h3 className="text-xl font-bold text-[#f5e6d3]">
                 {paymentStep === 1 && 'Pay with UPI'}
@@ -810,9 +758,7 @@ const fetchPlanDetails = async (planId) => {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6">
-              {/* Step 1: QR Code */}
               {paymentStep === 1 && (
                 <div className="text-center">
                   <div className="mb-4">
@@ -850,7 +796,6 @@ const fetchPlanDetails = async (planId) => {
                 </div>
               )}
 
-              {/* Step 2: Transaction ID */}
               {paymentStep === 2 && (
                 <div>
                   <p className="text-[#d4b8a0] text-sm mb-4">
@@ -880,7 +825,6 @@ const fetchPlanDetails = async (planId) => {
                 </div>
               )}
 
-              {/* Step 3: Upload Receipt */}
               {paymentStep === 3 && (
                 <div>
                   <p className="text-[#d4b8a0] text-sm mb-4">

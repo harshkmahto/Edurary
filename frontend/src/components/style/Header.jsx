@@ -175,7 +175,12 @@ const Header = () => {
                              hover:text-[#d4a85a] hover:border-[#c8963e]/30 hover:-translate-y-0.5 
                              hover:shadow-[0_4px_15px_rgba(200,150,62,0.15)] hover:scale-105
                              items-center justify-center transition-all duration-300">
+              {user.profilePicture ? 
+              (
+                <img src={user.profilePicture} className='w-4 h-4 object-cover' />
+              ):(
               <User className="w-4 h-4" />
+              )}
             </button>
 
             <button 

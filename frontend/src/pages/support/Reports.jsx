@@ -95,7 +95,7 @@ const Reports = () => {
             Please login to submit a report
           </p>
           <button
-            onClick={() => window.location.href = '/login'}
+            onClick={() => window.location.href = '/auth/signin'}
             className="px-6 py-2.5 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-medium transition-colors"
           >
             Login Now
