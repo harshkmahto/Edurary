@@ -209,7 +209,7 @@ const BookReading = () => {
 
   return (
     <div 
-      className="min-h-screen bg-gray-100 dark:bg-gray-900 relative overflow-hidden"
+      className="min-h-screen bg-gray-100 dark:bg-black relative overflow-hidden"
       onContextMenu={handleContextMenu}
       onCopy={handleCopy}
     >
@@ -352,7 +352,7 @@ const BookReading = () => {
           </div>
         </div>
 
-        {/* Book Content - Google Docs style viewer using iframe */}
+        {/* Book Content  */}
         <div 
           ref={pdfContainerRef}
           className="flex-1 relative bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-8 transition-all duration-300"
