@@ -50,7 +50,7 @@ const UpdateBooks = ({ book, onClose, onSuccess }) => {
         type: book.type || 'free',
         premiumPlans: book.premiumPlans || [],
         status: book.status || 'pending',
-        language: book.language || 'English',
+        language: book.language || '',
         order: book.order || 0,
       });
       if (book.thumbnail) {
@@ -397,22 +397,16 @@ const UpdateBooks = ({ book, onClose, onSuccess }) => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Language *
                 </label>
-                <select
+                {/* Changed from select to input - just like category and title */}
+                <input
+                  type="text"
                   name="language"
                   value={formData.language}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2.5 bg-white/50 dark:bg-black/50 border border-green-500/20 dark:border-green-400/10 rounded-xl focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
-                >
-                  <option value="English">English</option>
-                  <option value="Hindi">Hindi</option>
-                  <option value="Spanish">Spanish</option>
-                  <option value="French">French</option>
-                  <option value="German">German</option>
-                  <option value="Chinese">Chinese</option>
-                  <option value="Japanese">Japanese</option>
-                  <option value="Other">Other</option>
-                </select>
+                  placeholder="Enter language (e.g., English, Hindi, Spanish)"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
