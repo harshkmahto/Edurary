@@ -14,29 +14,6 @@ import {
 } from 'lucide-react';
 import MainButton from '../../components/style/MainButton';
 
-const StatusBadge = ({ verified, active }) => {
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-300 flex items-center gap-1.5 ${
-        verified 
-          ? 'bg-[rgba(0,200,100,0.15)] text-[#00cc88] border border-[rgba(0,200,100,0.2)] hover:bg-[rgba(0,200,100,0.25)]' 
-          : 'bg-[rgba(255,200,0,0.15)] text-[#ffcc44] border border-[rgba(255,200,0,0.2)] hover:bg-[rgba(255,200,0,0.25)]'
-      }`}>
-        {verified ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-        {verified ? 'Verified' : 'Unverified'}
-      </span>
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-300 flex items-center gap-1.5 ${
-        active 
-          ? 'bg-[rgba(0,200,100,0.15)] text-[#00cc88] border border-[rgba(0,200,100,0.2)] hover:bg-[rgba(0,200,100,0.25)]' 
-          : 'bg-[rgba(255,50,50,0.15)] text-[#ff4444] border border-[rgba(255,50,50,0.2)] hover:bg-[rgba(255,50,50,0.25)]'
-      }`}>
-        <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-[#00cc88]' : 'bg-[#ff4444]'} animate-pulse`} />
-        {active ? 'Active' : 'Inactive'}
-      </span>
-    </div>
-  );
-};
-
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, checkAuth } = useAuth();
@@ -60,6 +37,7 @@ const Profile = () => {
   const [subscription, setSubscription] = useState(null);
   const [remainingDays, setRemainingDays] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [localUser, setLocalUser] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -70,8 +48,9 @@ const Profile = () => {
     try {
       setLoading(true);
       const response = await authService.getProfile();
-      if (response.success) {
+      if (response.success && response.data && response.data.user) {
         const userData = response.data.user;
+        setLocalUser(userData);
         setFormData({
           name: userData.name || '',
           username: userData.username || '',
@@ -81,8 +60,10 @@ const Profile = () => {
           profession: userData.profession || '',
           bio: userData.bio || ''
         });
-        setProfilePicture(userData.profilePicture || null);
-        setProfilePicturePreview(userData.profilePicture || null);
+        // SAFELY set profile picture
+        const profilePic = userData.profilePicture || null;
+        setProfilePicture(profilePic);
+        setProfilePicturePreview(profilePic);
         
         // Get subscription details
         if (userData.activeSubscription) {
@@ -125,12 +106,12 @@ const Profile = () => {
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+        alert('Please select an image file');
         return;
       }
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
+        alert('Image size should be less than 5MB');
         return;
       }
       setProfilePicture(file);
@@ -145,7 +126,9 @@ const Profile = () => {
   const handleProfilePictureClick = () => {
     if (editing) {
       // In edit mode: open file upload
-      fileInputRef.current?.click();
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
     } else {
       // In view mode: open image popup
       if (profilePicturePreview) {
@@ -245,17 +228,17 @@ const Profile = () => {
     setEditing(false);
     setErrors({});
     setSuccess('');
-    if (user) {
+    if (localUser) {
       setFormData({
-        name: user.name || '',
-        username: user.username || '',
-        phone: user.phone || '',
-        age: user.age || '',
-        city: user.city || '',
-        profession: user.profession || '',
-        bio: user.bio || ''
+        name: localUser.name || '',
+        username: localUser.username || '',
+        phone: localUser.phone || '',
+        age: localUser.age || '',
+        city: localUser.city || '',
+        profession: localUser.profession || '',
+        bio: localUser.bio || ''
       });
-      setProfilePicturePreview(user.profilePicture || null);
+      setProfilePicturePreview(localUser.profilePicture || null);
     }
   };
 
@@ -284,8 +267,11 @@ const Profile = () => {
     );
   }
 
-  // If user is null, show error or redirect
-  if (!user) {
+  // Use localUser instead of user for display
+  const displayUser = localUser || user;
+
+  // If no user data, show login prompt
+  if (!displayUser) {
     return (
       <div className="min-h-screen bg-[#0a0505] relative overflow-hidden flex items-center justify-center">
         <div className="relative z-10 text-center">
@@ -374,7 +360,7 @@ const Profile = () => {
                   />
                 ) : (
                   <span className="text-3xl sm:text-4xl font-bold text-[#d4a85a]">
-                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    {displayUser?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 )}
                 {/* Camera icon only shown in edit mode */}
@@ -391,7 +377,7 @@ const Profile = () => {
                 onChange={handleProfilePictureChange}
                 className="hidden"
               />
-              {user?.isVerified && (
+              {displayUser?.isVerified && (
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full 
                               bg-gradient-to-r from-[#00cc88] to-[#00e699]
                               border-2 border-[#0a0505]
@@ -403,16 +389,16 @@ const Profile = () => {
 
             <h2 className="text-2xl sm:text-3xl font-bold text-[#f5e6c8] mt-4 
                           transition-all duration-300 hover:text-[#d4a85a]">
-              {user?.name}
+              {displayUser?.name || 'User'}
             </h2>
             <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
               <AtSign className="w-3.5 h-3.5 text-[#c8963e]" />
-              {user?.username}
+              {displayUser?.username || ''}
             </p>
-            {user?.bio && (
+            {displayUser?.bio && (
               <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
                 <StarCheck className="w-3.5 h-3.5 text-[#c8963e]" />
-                {user?.bio}
+                {displayUser?.bio}
               </p>
             )}
 
@@ -527,7 +513,7 @@ const Profile = () => {
                   </label>
                   <input
                     type="email"
-                    value={user?.email || ''}
+                    value={displayUser?.email || ''}
                     disabled
                     className="w-full px-4 py-3 bg-[rgba(10,5,5,0.3)] border border-[rgba(200,150,62,0.1)] rounded-xl text-[#5a3d2a] cursor-not-allowed"
                   />
@@ -646,7 +632,7 @@ const Profile = () => {
                     <Mail className="w-3.5 h-3.5 text-[#c8963e]" />
                     Email
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">{user?.email}</span>
+                  <span className="text-[#f5e6c8] text-sm">{displayUser?.email || 'Not provided'}</span>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b border-[rgba(200,150,62,0.08)]">
@@ -654,7 +640,7 @@ const Profile = () => {
                     <AtSign className="w-3.5 h-3.5 text-[#c8963e]" />
                     Username
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">@{user?.username}</span>
+                  <span className="text-[#f5e6c8] text-sm">@{displayUser?.username || 'Not provided'}</span>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b border-[rgba(200,150,62,0.08)]">
@@ -662,7 +648,7 @@ const Profile = () => {
                     <Phone className="w-3.5 h-3.5 text-[#c8963e]" />
                     Phone
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">{user?.phone || 'Not provided'}</span>
+                  <span className="text-[#f5e6c8] text-sm">{displayUser?.phone || 'Not provided'}</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
@@ -671,7 +657,7 @@ const Profile = () => {
                       <Cake className="w-3.5 h-3.5 text-[#c8963e]" />
                       Age
                     </span>
-                    <span className="text-[#f5e6c8] text-sm">{user?.age || 'Not provided'}</span>
+                    <span className="text-[#f5e6c8] text-sm">{displayUser?.age || 'Not provided'}</span>
                   </div>
 
                   <div className="flex items-center justify-between py-3 border-b border-[rgba(200,150,62,0.08)] sm:pl-6">
@@ -679,7 +665,7 @@ const Profile = () => {
                       <Home className="w-3.5 h-3.5 text-[#c8963e]" />
                       City
                     </span>
-                    <span className="text-[#f5e6c8] text-sm">{user?.city || 'Not provided'}</span>
+                    <span className="text-[#f5e6c8] text-sm">{displayUser?.city || 'Not provided'}</span>
                   </div>
                 </div>
 
@@ -688,16 +674,16 @@ const Profile = () => {
                     <Briefcase className="w-3.5 h-3.5 text-[#c8963e]" />
                     Profession
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">{user?.profession || 'Not provided'}</span>
+                  <span className="text-[#f5e6c8] text-sm">{displayUser?.profession || 'Not provided'}</span>
                 </div>
 
-                {user?.bio && (
+                {displayUser?.bio && (
                   <div className="flex items-start justify-between py-3 border-b border-[rgba(200,150,62,0.08)]">
                     <span className="text-[#d4b8a0] text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
                       <FileText className="w-3.5 h-3.5 text-[#c8963e]" />
                       Bio
                     </span>
-                    <span className="text-[#f5e6c8] text-sm text-right max-w-[60%]">{user?.bio}</span>
+                    <span className="text-[#f5e6c8] text-sm text-right max-w-[60%]">{displayUser.bio}</span>
                   </div>
                 )}
 
@@ -707,7 +693,7 @@ const Profile = () => {
                     Member Since
                   </span>
                   <span className="text-[#f5e6c8] text-sm">
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                    {displayUser?.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -738,7 +724,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Image Preview Modal - Only in view mode */}
+      {/* Image Preview Modal */}
       {showImageModal && profilePicturePreview && (
         <div 
           className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center z-50 animate-fade-in"
