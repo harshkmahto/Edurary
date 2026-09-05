@@ -212,26 +212,25 @@ const MyOrders = () => {
     }
   };
 
-const handlePayNow = (subscriberId, subscriptionData) => {
- 
-  let subId;
-  
-  if (typeof subscriptionData === 'object' && subscriptionData !== null) {
-    subId = subscriptionData._id || subscriptionData.id;
-  } else {
-    subId = subscriptionData;
-  }
-  
-  if (typeof subId === 'object' && subId !== null) {
-    subId = subId._id || subId.toString();
-  }
-  
-  if (!subId || typeof subId !== 'string') {
-    console.error('Could not extract subscription ID:', subscriptionData);
-    toast.error('Unable to process payment. Please try again.');
+const handlePayNow = (subscriberId) => {
+  // ✅ Use the subscriptions state directly
+  const subscriber = subscriptions.find(s => s._id === subscriberId);
+  if (!subscriber) {
+    toast.error('Subscription not found');
     return;
   }
-    navigate(`/checkout/${subId}?resume=${subscriberId}`);
+  
+  let subId = subscriber.subscriptionId;
+  if (typeof subId === 'object' && subId !== null) {
+    subId = subId._id || subId;
+  }
+  
+  if (!subId) {
+    toast.error('Unable to process payment');
+    return;
+  }
+  
+  navigate(`/checkout/${String(subId)}?resume=${subscriberId}`);
 };
 
   // Loading State
