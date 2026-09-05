@@ -251,6 +251,18 @@ deleteUsers: async (id) => {
   },
 
 
+getSubscriberById: async (id) => {
+  try {
+    const response = await api.get(`/user/subscriber/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || {
+      message: 'Failed to fetch subscriber details'
+    };
+  }
+},
+
+
  getAllSubscribers: async (params) => {
     try {
       const response = await api.get('/user/all', { params });
@@ -378,6 +390,7 @@ export const {
   submitPaymentProof,
   getUserSubscriptions,
   getUserActiveSubscription,
+  getSubscriberById,
   getAllSubscribers,
   updateSubscriberStatus,
   updatePaymentStatus,

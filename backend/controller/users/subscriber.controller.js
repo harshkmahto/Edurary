@@ -334,6 +334,50 @@ export const getUserActiveSubscription = async (req, res) => {
     }
 };
 
+export const getSubscriberById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id || req.user.id;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid subscriber ID format"
+            });
+        }
+
+        const subscriber = await Subscriber.findById(id)
+            .populate('subscriptionId', 'title icon features about price sellingPrice validity');
+
+        if (!subscriber) {
+            return res.status(404).json({
+                success: false,
+                message: "Subscriber record not found"
+            });
+        }
+
+        // Check if the subscriber belongs to the authenticated user
+        if (subscriber.userId.toString() !== userId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access to this subscription"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: subscriber
+        });
+
+    } catch (error) {
+        console.error('Error fetching subscriber:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Failed to fetch subscriber"
+        });
+    }
+};
+
 export const getAllSubscribers = async (req, res) => {
     try {
         const { status, subscriptionStatus, plan, page = 1, limit = 20 } = req.query;

@@ -9,7 +9,7 @@ import { register, verifyOTP, resendOTP, login, verifyLoginOTP, logout,
 import {  activateSubscription, activeSubscription, createSubscription, deleteSubscription, getAllSubscriptions, getSubscriptionById, updateSubscription } from '../controller/users/subscription.controller.js';
 
 import { admin, auth } from '../middleware/auth.middleware.js';
-import { createSubscriber, deleteReceipt, getAllInvoices, getAllSubscribers, getInvoice, getUpiDetails, getUserActiveSubscription, getUserSubscriptions, submitPaymentProof, updatePaymentStatus, updateSubscriptionStatus, updateUpiDetails } from '../controller/users/subscriber.controller.js';
+import { createSubscriber, deleteReceipt, getAllInvoices, getAllSubscribers, getInvoice, getSubscriberById, getUpiDetails, getUserActiveSubscription, getUserSubscriptions, submitPaymentProof, updatePaymentStatus, updateSubscriptionStatus, updateUpiDetails } from '../controller/users/subscriber.controller.js';
 import { upload } from '../middleware/upload.middleware.js';
 
 const userRoute = Router();
@@ -50,6 +50,7 @@ userRoute.post('/create', auth, createSubscriber);
 userRoute.post('/submit-payment', auth, upload.single('receipt'), submitPaymentProof);
 userRoute.get('/my-subscriptions', auth, getUserSubscriptions);
 userRoute.get('/active', auth, getUserActiveSubscription);
+userRoute.get('/subscriber/:id', auth, getSubscriberById);
 
 userRoute.get('/invoice/:subscriberId', auth, getInvoice);
 userRoute.get('/invoices', auth, getAllInvoices);
