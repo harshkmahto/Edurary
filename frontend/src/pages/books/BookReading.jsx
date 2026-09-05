@@ -143,7 +143,6 @@ const BookReading = () => {
   };
 
   const goToBookmark = () => {
-    // Scroll to top or refresh iframe
     if (iframeRef.current) {
       iframeRef.current.scrollTop = 0;
     }
@@ -210,17 +209,17 @@ const BookReading = () => {
 
   return (
     <div 
-      className={`min-h-screen ${isDarkMode ? 'bg-[#1a1a1a]' : 'bg-[#e8e8e8]'} relative overflow-hidden`}
+      className="min-h-screen bg-gray-100 dark:bg-gray-900 relative overflow-hidden"
       onContextMenu={handleContextMenu}
       onCopy={handleCopy}
     >
       {/* Google Docs style background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute inset-0 ${isDarkMode ? 'bg-[#1a1a1a]' : 'bg-[#e8e8e8]'}`} />
-        <div className={`absolute inset-0 ${isDarkMode ? 'opacity-5' : 'opacity-20'}`}>
+        <div className="absolute inset-0 bg-gray-100 dark:bg-gray-900" />
+        <div className="absolute inset-0 opacity-20 dark:opacity-10">
           <svg className="w-full h-full">
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke={isDarkMode ? '#ffffff' : '#000000'} strokeWidth="0.5"/>
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" className="text-black/20 dark:text-white/10" strokeWidth="0.5"/>
             </pattern>
             <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
@@ -229,23 +228,21 @@ const BookReading = () => {
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Top Navigation Bar */}
-        <div className={`bg-[${isDarkMode ? '#1a1a1a' : '#ffffff'}]/95 backdrop-blur-sm border-b border-[${isDarkMode ? '#333' : '#e0e0e0'}] 
-                       transition-opacity duration-300
-                       ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 transition-opacity duration-300">
           <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => navigate(`/book-preview/${id}`)}
-                className={`p-2 rounded-lg hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] text-[${isDarkMode ? '#aaa' : '#666'}] hover:text-[#c8963e] transition-colors`}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-[#c8963e] dark:hover:text-[#c8963e] transition-colors"
                 title="Go back"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div className="hidden sm:block">
-                <h1 className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate max-w-[150px] lg:max-w-[300px]`}>
+                <h1 className="text-gray-900 dark:text-white font-medium text-sm truncate max-w-[150px] lg:max-w-[300px]">
                   {book.title}
                 </h1>
-                <p className={`${isDarkMode ? 'text-gray-500' : 'text-gray-500'} text-xs flex items-center gap-2`}>
+                <p className="text-gray-500 dark:text-gray-400 text-xs flex items-center gap-2">
                   <User className="w-3 h-3" />
                   {book.authorName}
                 </p>
@@ -254,13 +251,13 @@ const BookReading = () => {
 
             <div className="flex items-center gap-4">
               <div className="hidden md:flex items-center gap-2 text-sm">
-                <span className={isDarkMode ? 'text-white' : 'text-gray-700'}>
+                <span className="text-gray-700 dark:text-gray-300">
                   {totalPages > 0 ? `${totalPages} pages` : 'Loading...'}
                 </span>
               </div>
               
               <div className="hidden md:block w-32">
-                <div className={`h-1 ${isDarkMode ? 'bg-[#333]' : 'bg-gray-200'} rounded-full overflow-hidden`}>
+                <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-[#c8963e] to-[#d4a85a] transition-all duration-300"
                     style={{ width: '100%' }}
@@ -272,7 +269,7 @@ const BookReading = () => {
             <div className="flex items-center gap-1">
               <button 
                 onClick={addBookmark}
-                className={`p-2 rounded-lg hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] text-[${isDarkMode ? '#aaa' : '#666'}] hover:text-[#d4a85a] transition-colors`}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-[#d4a85a] dark:hover:text-[#d4a85a] transition-colors"
                 title="Add bookmark"
               >
                 {bookmarks.length > 0 ? (
@@ -284,7 +281,7 @@ const BookReading = () => {
 
               <button 
                 onClick={toggleReadingMode}
-                className={`p-2 rounded-lg hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] text-[${isDarkMode ? '#aaa' : '#666'}] hover:text-[#d4a85a] transition-colors`}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-[#d4a85a] dark:hover:text-[#d4a85a] transition-colors"
                 title="Toggle reading mode"
               >
                 {readingMode === 'scroll' ? (
@@ -296,27 +293,28 @@ const BookReading = () => {
 
               <button 
                 onClick={toggleDarkMode}
-                className={`p-2 rounded-lg hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] text-[${isDarkMode ? '#aaa' : '#666'}] hover:text-[#d4a85a] transition-colors`}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-[#d4a85a] dark:hover:text-[#d4a85a] transition-colors"
                 title="Toggle dark mode"
               >
-                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                <Sun className="w-4 h-4 dark:hidden" />
+                <Moon className="w-4 h-4 hidden dark:block" />
               </button>
 
-              <div className={`w-px h-6 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`} />
+              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
 
               <button 
                 onClick={handleZoomOut}
-                className={`p-2 rounded-lg hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] text-[${isDarkMode ? '#aaa' : '#666'}] hover:text-[#d4a85a] transition-colors`}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-[#d4a85a] dark:hover:text-[#d4a85a] transition-colors"
                 title="Zoom out"
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
-              <span className={`text-sm min-w-[36px] text-center ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+              <span className="text-sm min-w-[36px] text-center text-gray-700 dark:text-gray-300">
                 100%
               </span>
               <button 
                 onClick={handleZoomIn}
-                className={`p-2 rounded-lg hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] text-[${isDarkMode ? '#aaa' : '#666'}] hover:text-[#d4a85a] transition-colors`}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-[#d4a85a] dark:hover:text-[#d4a85a] transition-colors"
                 title="Zoom in"
               >
                 <ZoomIn className="w-4 h-4" />
@@ -330,11 +328,11 @@ const BookReading = () => {
                 Reset
               </button>
 
-              <div className={`w-px h-6 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`} />
+              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
 
               <button 
                 onClick={handleFullscreen}
-                className={`p-2 rounded-lg hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] text-[${isDarkMode ? '#aaa' : '#666'}] hover:text-[#d4a85a] transition-colors`}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-[#d4a85a] dark:hover:text-[#d4a85a] transition-colors"
                 title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
               >
                 {isFullscreen ? (
@@ -357,7 +355,7 @@ const BookReading = () => {
         {/* Book Content - Google Docs style viewer using iframe */}
         <div 
           ref={pdfContainerRef}
-          className={`flex-1 relative ${isDarkMode ? 'bg-[#1a1a1a]' : 'bg-[#e8e8e8]'} flex items-center justify-center p-8 transition-all duration-300`}
+          className="flex-1 relative bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-8 transition-all duration-300"
           style={{
             height: isFullscreen ? 'calc(100vh - 100px)' : 'auto',
             minHeight: '500px',
@@ -365,31 +363,25 @@ const BookReading = () => {
         >
           {book.content ? (
             <div 
-              className={`relative rounded-sm shadow-2xl transition-all duration-300 overflow-hidden`}
+              className="relative rounded-sm shadow-2xl transition-all duration-300 overflow-hidden"
               style={{
                 width: '100%',
                 maxWidth: '900px',
                 height: isFullscreen ? 'calc(100vh - 160px)' : '700px',
-                backgroundColor: isDarkMode ? '#2d2d2d' : '#ffffff',
-                boxShadow: isDarkMode 
-                  ? '0 8px 40px rgba(0,0,0,0.6)' 
-                  : '0 8px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.05)',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.05)',
               }}
             >
-              {/* Google Docs style paper shadow overlay */}
-              <div className="absolute inset-0 pointer-events-none z-10">
-                <div className={`absolute top-0 left-0 right-0 h-4 bg-gradient-to-b ${isDarkMode ? 'from-black/10 to-transparent' : 'from-black/5 to-transparent'}`} />
-                <div className={`absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t ${isDarkMode ? 'from-black/10 to-transparent' : 'from-black/5 to-transparent'}`} />
+              <div className="absolute inset-0 pointer-events-none z-10 dark:hidden">
+                <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-black/5 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-black/5 to-transparent" />
               </div>
               
               <iframe
                 ref={iframeRef}
                 src={book.content}
                 title={book.title}
-                className="w-full h-full border-0"
-                style={{ 
-                  background: isDarkMode ? '#2d2d2d' : '#ffffff',
-                }}
+                className="w-full h-full border-0 bg-white dark:bg-gray-800"
               />
             </div>
           ) : (
@@ -401,18 +393,16 @@ const BookReading = () => {
         </div>
 
         {/* Bottom Controls */}
-        <div className={`bg-[${isDarkMode ? '#1a1a1a' : '#ffffff'}]/95 backdrop-blur-sm border-t border-[${isDarkMode ? '#333' : '#e0e0e0'}] 
-                       transition-opacity duration-300 p-3
-                       ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 transition-opacity duration-300 p-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
                 {totalPages > 0 ? `${totalPages} pages` : 'Loading...'}
               </span>
             </div>
 
             <div className="flex-1 max-w-md mx-4">
-              <div className={`h-1 ${isDarkMode ? 'bg-[#333]' : 'bg-gray-200'} rounded-full overflow-hidden`}>
+              <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-[#c8963e] to-[#d4a85a] transition-all duration-300"
                   style={{ width: '100%' }}
@@ -423,18 +413,18 @@ const BookReading = () => {
             <div className="flex items-center gap-2">
               {bookmarks.length > 0 && (
                 <div className="relative group">
-                  <button className={`p-2 rounded-lg hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] text-[${isDarkMode ? '#aaa' : '#666'}] hover:text-[#d4a85a] transition-colors`}>
+                  <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-[#d4a85a] dark:hover:text-[#d4a85a] transition-colors">
                     <BookMarked className="w-5 h-5" />
                     <span className="absolute -top-1 -right-1 text-[10px] bg-[#c8963e] text-[#0a0505] rounded-full w-4 h-4 flex items-center justify-center">
                       {bookmarks.length}
                     </span>
                   </button>
-                  <div className={`absolute bottom-full right-0 mb-2 ${isDarkMode ? 'bg-[#2d2d2d] border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-2 min-w-[150px] hidden group-hover:block shadow-lg`}>
+                  <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 min-w-[150px] hidden group-hover:block shadow-lg">
                     {bookmarks.map((bm, index) => (
-                      <div key={index} className={`flex items-center justify-between gap-2 px-2 py-1 hover:bg-[${isDarkMode ? '#333' : '#f0f0f0'}] rounded`}>
+                      <div key={index} className="flex items-center justify-between gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
                         <button 
                           onClick={goToBookmark}
-                          className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'} text-sm`}
+                          className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm"
                         >
                           {bm.note || 'Bookmark'}
                         </button>
@@ -455,7 +445,7 @@ const BookReading = () => {
 
         {/* Watermark */}
         <div className="absolute inset-0 pointer-events-none select-none">
-          <div className={`absolute bottom-4 right-4 ${isDarkMode ? 'text-white/5' : 'text-black/5'} text-xs font-mono`}>
+          <div className="absolute bottom-4 right-4 text-black/5 dark:text-white/5 text-xs font-mono">
             {book.title} • Protected Content
           </div>
         </div>

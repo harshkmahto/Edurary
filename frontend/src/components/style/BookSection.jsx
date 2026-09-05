@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SquareText from '../../components/style/SquareText';
 import bookService from '../../services/book.service';
@@ -120,7 +120,18 @@ const BookSection = () => {
                             hover:shadow-[0_0_40px_rgba(200,150,62,0.2)]
                             hover:border-[#c8963e]/40
                             aspect-[3/4]">
-                
+
+                {/* ✅ CROWN BADGE - Only for premium books */}
+                {book.type === 'premium' && (
+                  <div className="absolute top-3 right-3 z-10">
+                    <div className="bg-gradient-to-br from-[#f5c842] to-[#c8963e] 
+                                  rounded-full p-1.5 shadow-lg shadow-[#c8963e]/30
+                                  border border-[#f5c842]/50">
+                      <Crown size={18} className="text-[#1a0a0a] fill-[#1a0a0a]" />
+                    </div>
+                  </div>
+                )}
+
                 {/* Book Cover Image */}
                 <div className="relative overflow-hidden w-full h-full">
                   {book.thumbnail ? (
