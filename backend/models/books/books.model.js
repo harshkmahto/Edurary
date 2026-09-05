@@ -83,6 +83,10 @@ const bookSchema = new mongoose.Schema({
         type: String,
         required: true,
         default: 'English',
+       enum: {
+            values: ['English', 'Hindi',  'Bengali', 'Urdu', 'Punjabi', 'Sanskrit'],
+            message: 'Language must be one of: English, Hindi,  Bengali, Urdu, Punjabi, Sanskrit'
+        },
         trim: true,
     },
     ratings: {
