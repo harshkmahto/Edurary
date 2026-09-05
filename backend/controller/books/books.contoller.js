@@ -123,7 +123,7 @@ export const createBook = async (req, res) => {
             type: type || 'free',
             premiumPlans: parsedPremiumPlans || [],
             status: status || 'pending',
-            language: language || 'English',
+            language,
             order: parseInt(order) || 0,
             views: 0,
             downloads: 0,

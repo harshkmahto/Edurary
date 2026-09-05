@@ -81,8 +81,6 @@ const bookSchema = new mongoose.Schema({
     },
     language: {
         type: String,
-        required: true,
-        default: 'English',
         trim: true,
     },
     ratings: {
