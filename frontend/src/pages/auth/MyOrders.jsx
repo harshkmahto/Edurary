@@ -213,42 +213,25 @@ const MyOrders = () => {
   };
 
 const handlePayNow = (subscriberId, subscriptionData) => {
-  console.log('Subscription Data:', subscriptionData); // Debug log
-  
+ 
   let subId;
   
-  // Case 1: If subscriptionData is already a string
-  if (typeof subscriptionData === 'string') {
+  if (typeof subscriptionData === 'object' && subscriptionData !== null) {
+    subId = subscriptionData._id || subscriptionData.id;
+  } else {
     subId = subscriptionData;
   }
-  // Case 2: If subscriptionData is an object with _id
-  else if (typeof subscriptionData === 'object' && subscriptionData !== null) {
-    subId = subscriptionData._id || subscriptionData.id;
-  }
-  // Case 3: If subscriptionData is something else, try to find it in the subscriptions array
-  else {
-    const sub = subscriptions.find(s => s._id === subscriberId);
-    if (sub && sub.subscriptionId) {
-      subId = typeof sub.subscriptionId === 'object' 
-        ? sub.subscriptionId._id 
-        : sub.subscriptionId;
-    }
-  }
   
-  // If subId is still an object, convert to string
   if (typeof subId === 'object' && subId !== null) {
     subId = subId._id || subId.toString();
   }
   
-  // Make sure we have a valid ID
-  if (!subId) {
+  if (!subId || typeof subId !== 'string') {
     console.error('Could not extract subscription ID:', subscriptionData);
     toast.error('Unable to process payment. Please try again.');
     return;
   }
-  
-  // Navigate to checkout with resume parameter
-  navigate(`/checkout/${subId}?resume=${subscriberId}`);
+    navigate(`/checkout/${subId}?resume=${subscriberId}`);
 };
 
   // Loading State

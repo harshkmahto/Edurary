@@ -347,7 +347,7 @@ export const getSubscriberById = async (req, res) => {
         }
 
         const subscriber = await Subscriber.findById(id)
-            .populate('subscriptionId', 'title features about price sellingPrice validity');
+            .populate('subscriptionId', 'title icon features about price sellingPrice validity');
 
         if (!subscriber) {
             return res.status(404).json({
