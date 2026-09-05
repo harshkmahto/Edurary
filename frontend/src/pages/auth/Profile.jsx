@@ -14,29 +14,6 @@ import {
 } from 'lucide-react';
 import MainButton from '../../components/style/MainButton';
 
-const StatusBadge = ({ verified, active }) => {
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-300 flex items-center gap-1.5 ${
-        verified 
-          ? 'bg-[rgba(0,200,100,0.15)] text-[#00cc88] border border-[rgba(0,200,100,0.2)] hover:bg-[rgba(0,200,100,0.25)]' 
-          : 'bg-[rgba(255,200,0,0.15)] text-[#ffcc44] border border-[rgba(255,200,0,0.2)] hover:bg-[rgba(255,200,0,0.25)]'
-      }`}>
-        {verified ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-        {verified ? 'Verified' : 'Unverified'}
-      </span>
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-300 flex items-center gap-1.5 ${
-        active 
-          ? 'bg-[rgba(0,200,100,0.15)] text-[#00cc88] border border-[rgba(0,200,100,0.2)] hover:bg-[rgba(0,200,100,0.25)]' 
-          : 'bg-[rgba(255,50,50,0.15)] text-[#ff4444] border border-[rgba(255,50,50,0.2)] hover:bg-[rgba(255,50,50,0.25)]'
-      }`}>
-        <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-[#00cc88]' : 'bg-[#ff4444]'} animate-pulse`} />
-        {active ? 'Active' : 'Inactive'}
-      </span>
-    </div>
-  );
-};
-
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, checkAuth } = useAuth();
@@ -70,7 +47,7 @@ const Profile = () => {
     try {
       setLoading(true);
       const response = await authService.getProfile();
-      if (response.success) {
+      if (response.success && response.data && response.data.user) {
         const userData = response.data.user;
         setFormData({
           name: userData.name || '',
@@ -81,8 +58,10 @@ const Profile = () => {
           profession: userData.profession || '',
           bio: userData.bio || ''
         });
-        setProfilePicture(userData.profilePicture || null);
-        setProfilePicturePreview(userData.profilePicture || null);
+        // SAFELY set profile picture
+        const profilePic = userData.profilePicture || null;
+        setProfilePicture(profilePic);
+        setProfilePicturePreview(profilePic);
         
         // Get subscription details
         if (userData.activeSubscription) {
@@ -125,12 +104,14 @@ const Profile = () => {
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+        // toast.error('Please select an image file');
+        alert('Please select an image file');
         return;
       }
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
+        // toast.error('Image size should be less than 5MB');
+        alert('Image size should be less than 5MB');
         return;
       }
       setProfilePicture(file);
@@ -145,7 +126,9 @@ const Profile = () => {
   const handleProfilePictureClick = () => {
     if (editing) {
       // In edit mode: open file upload
-      fileInputRef.current?.click();
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
     } else {
       // In view mode: open image popup
       if (profilePicturePreview) {
@@ -284,9 +267,26 @@ const Profile = () => {
     );
   }
 
+  // If user is null, show error or redirect
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0a0505] relative overflow-hidden flex items-center justify-center">
+        <div className="relative z-10 text-center">
+          <p className="text-[#d4b8a0] text-lg">Please login to view your profile</p>
+          <button
+            onClick={() => navigate('/auth/signin')}
+            className="mt-4 px-6 py-2 bg-[#c8963e] text-white rounded-lg hover:bg-[#d4a85a] transition-colors"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0505] relative overflow-hidden flex items-center justify-center p-4 md:p-8">
-      {/* Background */}
+      {/* Background - same as before */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
                       w-[800px] h-[800px] rounded-full 
@@ -386,16 +386,18 @@ const Profile = () => {
 
             <h2 className="text-2xl sm:text-3xl font-bold text-[#f5e6c8] mt-4 
                           transition-all duration-300 hover:text-[#d4a85a]">
-              {user?.name}
+              {user?.name || 'User'}
             </h2>
             <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
               <AtSign className="w-3.5 h-3.5 text-[#c8963e]" />
-              {user?.username}
+              {user?.username || ''}
             </p>
-            <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
-              <StarCheck className="w-3.5 h-3.5 text-[#c8963e]" />
-              {user?.bio}
-            </p>
+            {user?.bio && (
+              <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
+                <StarCheck className="w-3.5 h-3.5 text-[#c8963e]" />
+                {user?.bio}
+              </p>
+            )}
 
             {/* Active Subscription */}
             {subscription && subscription.subscriptionStatus === 'active' && (
@@ -428,6 +430,7 @@ const Profile = () => {
             )}
           </div>
 
+          {/* Rest of the component remains the same */}
           {/* Decorative Divider */}
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#c8963e]/20" />
@@ -627,7 +630,7 @@ const Profile = () => {
                     <Mail className="w-3.5 h-3.5 text-[#c8963e]" />
                     Email
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">{user?.email}</span>
+                  <span className="text-[#f5e6c8] text-sm">{user?.email || 'Not provided'}</span>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b border-[rgba(200,150,62,0.08)]">
@@ -635,7 +638,7 @@ const Profile = () => {
                     <AtSign className="w-3.5 h-3.5 text-[#c8963e]" />
                     Username
                   </span>
-                  <span className="text-[#f5e6c8] text-sm">@{user?.username}</span>
+                  <span className="text-[#f5e6c8] text-sm">@{user?.username || 'Not provided'}</span>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b border-[rgba(200,150,62,0.08)]">
@@ -719,8 +722,8 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Image Preview Modal - Only in view mode */}
-      {showImageModal && (
+      {/* Image Preview Modal */}
+      {showImageModal && profilePicturePreview && (
         <div 
           className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center z-50 animate-fade-in"
           onClick={() => setShowImageModal(false)}
