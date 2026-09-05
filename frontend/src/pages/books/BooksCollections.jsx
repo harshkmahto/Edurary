@@ -298,11 +298,7 @@ const BooksCollections = () => {
                     {category.name}
                   </span>
 
-                  <span className="text-gray-400 dark:text-[#8b6b5a] text-xs px-2 py-0.5 rounded-full 
-                                 bg-gray-100 dark:bg-[#c8963e]/10 border border-gray-200 dark:border-[#c8963e]/10 
-                                 transition-colors duration-300 group-hover:bg-[#c8963e]/20 group-hover:text-[#d4a85a]">
-                    {category.count}
-                  </span>
+                
                 </div>
               ))}
             </div>

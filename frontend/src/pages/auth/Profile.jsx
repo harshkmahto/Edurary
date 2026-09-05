@@ -284,6 +284,23 @@ const Profile = () => {
     );
   }
 
+  // If user is null, show error or redirect
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0a0505] relative overflow-hidden flex items-center justify-center">
+        <div className="relative z-10 text-center">
+          <p className="text-[#d4b8a0] text-lg">Please login to view your profile</p>
+          <button
+            onClick={() => navigate('/auth/signin')}
+            className="mt-4 px-6 py-2 bg-[#c8963e] text-white rounded-lg hover:bg-[#d4a85a] transition-colors"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0505] relative overflow-hidden flex items-center justify-center p-4 md:p-8">
       {/* Background */}
@@ -392,10 +409,12 @@ const Profile = () => {
               <AtSign className="w-3.5 h-3.5 text-[#c8963e]" />
               {user?.username}
             </p>
-            <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
-              <StarCheck className="w-3.5 h-3.5 text-[#c8963e]" />
-              {user?.bio}
-            </p>
+            {user?.bio && (
+              <p className="text-[#d4b8a0] text-sm flex items-center justify-center gap-1.5">
+                <StarCheck className="w-3.5 h-3.5 text-[#c8963e]" />
+                {user?.bio}
+              </p>
+            )}
 
             {/* Active Subscription */}
             {subscription && subscription.subscriptionStatus === 'active' && (
@@ -678,7 +697,7 @@ const Profile = () => {
                       <FileText className="w-3.5 h-3.5 text-[#c8963e]" />
                       Bio
                     </span>
-                    <span className="text-[#f5e6c8] text-sm text-right max-w-[60%]">{user.bio}</span>
+                    <span className="text-[#f5e6c8] text-sm text-right max-w-[60%]">{user?.bio}</span>
                   </div>
                 )}
 
@@ -720,7 +739,7 @@ const Profile = () => {
       </div>
 
       {/* Image Preview Modal - Only in view mode */}
-      {showImageModal && (
+      {showImageModal && profilePicturePreview && (
         <div 
           className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center z-50 animate-fade-in"
           onClick={() => setShowImageModal(false)}
