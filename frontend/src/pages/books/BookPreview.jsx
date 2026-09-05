@@ -243,6 +243,11 @@ const BookPreview = () => {
     );
   }
 
+  // Helper function to format key names for display
+  const formatKeyName = (key) => {
+    return key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0505] relative overflow-hidden">
       {/* Background Effects */}
@@ -269,10 +274,11 @@ const BookPreview = () => {
           <span>Back</span>
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           
+          {/* Left Column - Sticky on desktop */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8">
+            <div className="lg:sticky lg:top-8">
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden
                             bg-gradient-to-br from-[#2d1810]/40 to-[#1a0a0a]/60
                             border border-[#c8963e]/20
@@ -405,6 +411,7 @@ const BookPreview = () => {
             </div>
           </div>
 
+          {/* Right Column - Scrollable content */}
           <div className="lg:col-span-2 space-y-6">
             <div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#f5e6d3] mb-2">
@@ -489,6 +496,28 @@ const BookPreview = () => {
               )}
             </div>
 
+            {/* About Section - Key Value Pairs */}
+            {book.about && Object.keys(book.about).length > 0 && (
+              <div className="p-6 rounded-xl bg-[#1a0a0a]/40 border border-[#c8963e]/10">
+                <h2 className="text-[#f5e6d3] font-bold text-lg mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#c8963e]" />
+                  Book Details
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Object.entries(book.about).map(([key, value]) => (
+                    <div key={key} className="p-3 rounded-lg bg-[#0a0505]/50 border border-[#c8963e]/5">
+                      <p className="text-[#8b6b5a] text-xs uppercase tracking-wider mb-1">
+                        {formatKeyName(key)}
+                      </p>
+                      <p className="text-[#d4b8a0] text-sm font-medium">
+                        {typeof value === 'object' ? JSON.stringify(value) : value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 rounded-xl
                           bg-[#1a0a0a]/40 border border-[#c8963e]/10">
               {book.publication && (
@@ -531,25 +560,6 @@ const BookPreview = () => {
               </div>
             )}
 
-            {book.about && Object.keys(book.about).length > 0 && (
-              <div className="p-6 rounded-xl bg-[#1a0a0a]/40 border border-[#c8963e]/10">
-                <h2 className="text-[#f5e6d3] font-bold text-lg mb-3 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-[#c8963e]" />
-                  More Information
-                </h2>
-                <div className="space-y-2">
-                  {Object.entries(book.about).map(([key, value]) => (
-                    <div key={key} className="flex items-start gap-2">
-                      <span className="text-[#8b6b5a] text-sm capitalize min-w-[100px]">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}:
-                      </span>
-                      <span className="text-[#d4b8a0] text-sm">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Book Rating Component */}
             <BookRating 
               bookId={id} 
@@ -570,6 +580,18 @@ const BookPreview = () => {
             </div>
           </div>
         </div>
+
+        {/* Similar Books Section */}
+        {book && (
+          <div className="mt-12 border-t border-[#c8963e]/10 pt-8">
+            <SimilarBooks
+              currentBookId={book._id}
+              category={book.category}
+              subject={book.subject}
+              authorName={book.authorName}
+            />
+          </div>
+        )}
       </div>
 
       {/* Save/Unsave Modal */}
@@ -692,17 +714,6 @@ const BookPreview = () => {
           </div>
         </div>
       )}
-
-      {book && (
-  <div className="mt-8 border-t border-[#c8963e]/10 pt-8">
-    <SimilarBooks
-      currentBookId={book._id}
-      category={book.category}
-      subject={book.subject}
-      authorName={book.authorName}
-    />
-  </div>
-)}
     </div>
   );
 };

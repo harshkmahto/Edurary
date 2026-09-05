@@ -17,20 +17,29 @@ import {
   Globe,
   Hash,
   Bookmark,
+  BookmarkCheck,
   ExternalLink,
   Maximize2,
   Minimize2,
   Users,
   MessageSquare,
-  Clock
+  Clock,
+  Heart,
+  Loader2,
+  Check,
+  Folder,
+  X
 } from 'lucide-react';
 import { getBookById } from '../../services/book.service';
 import bookService from '../../services/book.service';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/authContext';
 
 const BookAbout = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('about');
@@ -42,6 +51,15 @@ const BookAbout = () => {
   const pdfContainerRef = useRef(null);
   const iframeRef = useRef(null);
 
+  // Save related states
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedLists, setSavedLists] = useState([]);
+  const [userLists, setUserLists] = useState([]);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [selectedLists, setSelectedLists] = useState([]);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [totalSaves, setTotalSaves] = useState(0);
+
   useEffect(() => {
     fetchBook();
   }, [id]);
@@ -52,15 +70,23 @@ const BookAbout = () => {
     }
   }, [activeTab, book]);
 
+  useEffect(() => {
+    if (showSaveModal) {
+      fetchUserLists();
+    }
+  }, [showSaveModal]);
+
   const fetchBook = async () => {
     try {
       setLoading(true);
       const response = await getBookById(id);
       if (response?.success) {
         setBook(response.book);
+        setTotalSaves(response.book.totalSaves || 0);
         if (response.book.content) {
           getPDFPageCount(response.book.content);
         }
+        await checkBookSaveStatus();
       } else {
         toast.error(response?.message || 'Failed to fetch book');
         navigate('/admin/books');
@@ -71,6 +97,105 @@ const BookAbout = () => {
       navigate('/admin/books');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkBookSaveStatus = async () => {
+    try {
+      const response = await bookService.checkBookSaved(id);
+      if (response.success) {
+        setIsSaved(response.isSaved);
+        setSavedLists(response.saves || []);
+        setSelectedLists(response.saves.map(save => save.listId));
+      }
+    } catch (error) {
+      console.error('Error checking save status:', error);
+    }
+  };
+
+  const fetchUserLists = async () => {
+    try {
+      const response = await bookService.getUserLists();
+      if (response.success) {
+        setUserLists(response.lists);
+        const savedListIds = savedLists.map(save => save.listId);
+        setSelectedLists(savedListIds);
+      }
+    } catch (error) {
+      console.error('Error fetching user lists:', error);
+    }
+  };
+
+  const handleToggleListSelection = (listId) => {
+    setSelectedLists(prev => {
+      if (prev.includes(listId)) {
+        return prev.filter(id => id !== listId);
+      } else {
+        return [...prev, listId];
+      }
+    });
+  };
+
+  const handleSaveBook = async () => {
+    try {
+      setSaveLoading(true);
+      
+      const currentSavedListIds = savedLists.map(save => save.listId);
+      const listsToAdd = selectedLists.filter(id => !currentSavedListIds.includes(id));
+      const listsToRemove = currentSavedListIds.filter(id => !selectedLists.includes(id));
+
+      for (const listId of listsToAdd) {
+        await bookService.saveBookToList(id, { listId, notes: '' });
+      }
+
+      for (const listId of listsToRemove) {
+        await bookService.removeBookFromList(id, { listId });
+      }
+
+      setIsSaved(selectedLists.length > 0);
+      
+      if (listsToAdd.length > 0 && listsToRemove.length === 0 && !isSaved) {
+        setTotalSaves(prev => prev + 1);
+      } else if (listsToRemove.length > 0 && listsToAdd.length === 0 && isSaved) {
+        setTotalSaves(prev => Math.max(0, prev - 1));
+      }
+
+      await checkBookSaveStatus();
+      setShowSaveModal(false);
+      toast.success('Book saved successfully');
+      
+    } catch (error) {
+      console.error('Error saving book:', error);
+      toast.error(error.message || 'Failed to save book');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  const handleRemoveAllSaves = async () => {
+    if (!confirm('Remove this book from all your lists?')) return;
+    
+    try {
+      setSaveLoading(true);
+      
+      for (const save of savedLists) {
+        await bookService.removeBookFromList(id, { listId: save.listId });
+      }
+      
+      setIsSaved(false);
+      setSavedLists([]);
+      setSelectedLists([]);
+      setTotalSaves(prev => Math.max(0, prev - 1));
+      
+      await checkBookSaveStatus();
+      setShowSaveModal(false);
+      toast.success('Book removed from all lists');
+      
+    } catch (error) {
+      console.error('Error removing book from all lists:', error);
+      toast.error(error.message || 'Failed to remove book from lists');
+    } finally {
+      setSaveLoading(false);
     }
   };
 
@@ -183,6 +308,13 @@ const BookAbout = () => {
     });
   };
 
+  const hexToRgb = (hex) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? 
+      `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` :
+      '200, 150, 62';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-green-50 dark:bg-black flex items-center justify-center">
@@ -219,6 +351,26 @@ const BookAbout = () => {
               Back to Books
             </button>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSaveModal(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  isSaved 
+                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {isSaved ? (
+                  <>
+                    <BookmarkCheck className="w-4 h-4" />
+                    <span>Saved ({totalSaves})</span>
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-4 h-4" />
+                    <span>Save ({totalSaves})</span>
+                  </>
+                )}
+              </button>
               <span className={`px-2 py-1 rounded-md text-xs font-medium ${book.type === 'premium' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'}`}>
                 {book.type === 'premium' ? (
                   <span className="flex items-center gap-1">
@@ -300,6 +452,10 @@ const BookAbout = () => {
                   <div className="flex items-center gap-1">
                     <Download className="w-4 h-4" />
                     <span>{book.downloads || 0} downloads</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Bookmark className="w-4 h-4 text-amber-500" />
+                    <span>{totalSaves} saves</span>
                   </div>
                 </div>
               </div>
@@ -702,6 +858,127 @@ const BookAbout = () => {
           </div>
         </div>
       </div>
+
+      {/* Save/Unsave Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-green-200/30 dark:border-green-800/30 max-w-md w-full max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-green-200/30 dark:border-green-800/30">
+              <h3 className="text-gray-900 dark:text-white text-xl font-semibold flex items-center gap-2">
+                <Heart className="w-5 h-5 text-green-600 dark:text-green-400" />
+                Save Book
+              </h3>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                Select lists to save "{book.title}" to:
+              </p>
+
+              {userLists.length === 0 ? (
+                <div className="text-center py-8">
+                  <Folder className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">No lists found</p>
+                  <button
+                    onClick={() => {
+                      setShowSaveModal(false);
+                      navigate('/save');
+                    }}
+                    className="mt-3 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm transition-colors"
+                  >
+                    Create a list →
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {userLists.map((list) => {
+                    const isSelected = selectedLists.includes(list._id);
+                    const listColor = list.color || '#22c55e';
+                    
+                    return (
+                      <div
+                        key={list._id}
+                        onClick={() => handleToggleListSelection(list._id)}
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 border ${
+                          isSelected
+                            ? `border-[${listColor}]/50`
+                            : 'border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700'
+                        }`}
+                        style={{
+                          backgroundColor: isSelected 
+                            ? `rgba(${hexToRgb(listColor)}, 0.1)`
+                            : 'transparent'
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{list.icon || '📚'}</span>
+                          <div>
+                            <p className="text-gray-900 dark:text-white font-medium">
+                              {list.name}
+                              {list.isDefault && (
+                                <Star className="w-3 h-3 text-amber-400 inline ml-1" />
+                              )}
+                            </p>
+                            <p className="text-gray-500 dark:text-gray-400 text-xs">
+                              {list.bookCount || 0} books
+                            </p>
+                          </div>
+                        </div>
+                        <div 
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                            isSelected
+                              ? `border-[${listColor}] bg-[${listColor}]`
+                              : 'border-gray-300 dark:border-gray-600'
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-green-200/30 dark:border-green-800/30 flex flex-col gap-2">
+              <button
+                onClick={handleSaveBook}
+                disabled={saveLoading}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {saveLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Heart className="w-4 h-4" />
+                    Save to Selected Lists
+                  </>
+                )}
+              </button>
+              {isSaved && savedLists.length > 0 && (
+                <button
+                  onClick={handleRemoveAllSaves}
+                  disabled={saveLoading}
+                  className="w-full text-red-500 hover:text-red-400 text-sm py-1.5 transition-colors disabled:opacity-50"
+                >
+                  Remove from all lists
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Styles */}
       <style jsx>{`
